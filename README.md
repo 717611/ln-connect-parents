@@ -1072,3 +1072,31 @@ cd <repository-name>
 npm i
 npm run dev
 ```
+
+## Firebase environment variables (shared School Portal backend)
+
+The Parent Portal reads every Firebase value from Vite env vars — nothing is hardcoded.
+See `.env.example` for the full list.
+
+Local development — create `.env.local` in the project root:
+
+```sh
+VITE_FIREBASE_API_KEY=...
+VITE_FIREBASE_AUTH_DOMAIN=...
+VITE_FIREBASE_PROJECT_ID=...
+VITE_FIREBASE_STORAGE_BUCKET=...
+VITE_FIREBASE_MESSAGING_SENDER_ID=...
+VITE_FIREBASE_APP_ID=...
+VITE_FIRESTORE_DATABASE_ID=ai-studio-lninternationals-5d0a906a-852c-4dc9-8b16-611cc88a1568
+```
+
+Vercel — add the same variables under **Project Settings → Environment Variables**
+(Production, Preview and Development), then redeploy so Vite inlines them at build time.
+
+Notes:
+- `VITE_*` variables are build-time and end up in the client bundle, so they must be the
+  Firebase **web app config** (publishable) values — never service-account or admin keys.
+- `VITE_FIRESTORE_DATABASE_ID` is optional: the School Portal's custom database ID is the
+  built-in default in `src/config/firebase.ts`.
+- Until the six required variables are present, the app runs on mock data
+  (`getDataSource()` returns `"mock"`); once present it switches to Firestore automatically.
