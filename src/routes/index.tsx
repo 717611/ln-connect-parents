@@ -98,10 +98,11 @@ function LoginScreen() {
         height={1402}
         loading="lazy"
         decoding="async"
-        className="absolute inset-0 size-full scale-105 object-cover object-center blur-[1.5px] brightness-[0.82] saturate-[0.85]"
+        className="absolute inset-0 size-full scale-105 object-cover object-center blur-[1px] brightness-[1.45] saturate-[0.9]"
       />
-      <div className="absolute inset-0 bg-secondary/50" />
-      <div className="absolute inset-0 bg-gradient-to-b from-secondary/35 via-secondary/60 to-secondary/95" />
+      <div className="absolute inset-0 bg-secondary/35" />
+      <div className="absolute inset-0 bg-gradient-to-b from-secondary/20 via-secondary/45 to-secondary/90" />
+
 
 
       <div className="relative mx-auto flex min-h-screen w-full max-w-lg flex-col px-6 pb-10 pt-16">
