@@ -35,10 +35,10 @@ export const Route = createFileRoute("/")({
         content:
           "Sign in to the LN International School Parent Portal to follow homework, classwork, notices and school updates for your child.",
       },
-      { property: "og:title", content: "LN Parent Portal — Login" },
+      { property: "og:title", content: "Login | LN Parent Portal — LN International School" },
       {
         property: "og:description",
-        content: "Stay connected with your child's academic journey at LN International School, Ranchi.",
+        content: "Sign in to the LN International School Parent Portal to follow homework, classwork, notices and school updates for your child.",
       },
     ],
   }),
