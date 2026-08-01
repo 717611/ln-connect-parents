@@ -37,12 +37,9 @@ export function AppShell({
   return (
     <ProtectedRoute>
       <div className="min-h-screen bg-background">
-        <AppHeader
-          title={title}
-          showBack={showBack}
-          showNotifications={showNotifications}
-          children={header}
-        />
+        <AppHeader title={title} showBack={showBack} showNotifications={showNotifications}>
+          {header}
+        </AppHeader>
         <main>
           <ErrorBoundary>
             {!isOnline ? (
