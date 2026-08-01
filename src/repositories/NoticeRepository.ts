@@ -1,6 +1,9 @@
+import { COLLECTIONS } from "@/constants/config";
 import { mockNotices } from "@/data/mockData";
 import type { Notice, NoticeScope } from "@/models";
 
+import { getDocById, listDocs, orderBy, useFirebase, where } from "./firestore/firestore.utils";
+import { mapNotice } from "./firestore/mappers";
 import { byNewest, resolveMock } from "./repository.utils";
 
 export interface INoticeRepository {
@@ -9,16 +12,26 @@ export interface INoticeRepository {
 }
 
 export const NoticeRepository: INoticeRepository = {
-  // TODO(firebase): query(collection(db, COLLECTIONS.notices),
-  //   where("scope", "==", scope), where("classroomId", "in", [null, classroomId]),
-  //   orderBy("publishedAt", "desc"))
-  async listByScope(scope, _classroomId) {
+  async listByScope(scope, classroomId) {
+    if (useFirebase()) {
+      const docs = await listDocs(COLLECTIONS.notices, [
+        where("scope", "==", scope),
+        orderBy("publishedAt", "desc"),
+      ]);
+      const notices = docs.map(mapNotice);
+      return scope === "class" && classroomId
+        ? notices.filter((notice) => !notice.classroomId || notice.classroomId === classroomId)
+        : notices;
+    }
     const filtered = mockNotices.filter((notice) => notice.scope === scope);
     return resolveMock(byNewest(filtered, "publishedAt"));
   },
 
-  // TODO(firebase): getDoc(doc(db, COLLECTIONS.notices, noticeId))
   async getById(noticeId) {
+    if (useFirebase()) {
+      const raw = await getDocById(COLLECTIONS.notices, noticeId);
+      return raw ? mapNotice(raw) : null;
+    }
     return resolveMock(mockNotices.find((notice) => notice.id === noticeId) ?? null);
   },
 };
