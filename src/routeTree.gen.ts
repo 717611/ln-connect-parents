@@ -14,7 +14,10 @@ import { Route as AttendanceRouteImport } from './routes/attendance'
 import { Route as GalleryRouteImport } from './routes/gallery'
 import { Route as HomeRouteImport } from './routes/home'
 import { Route as NoticesRouteImport } from './routes/notices'
+import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as WorkRouteImport } from './routes/work'
+import { Route as ComplaintsIndexRouteImport } from './routes/complaints.index'
+import { Route as ComplaintsComplaintIdRouteImport } from './routes/complaints.$complaintId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -41,9 +44,24 @@ const NoticesRoute = NoticesRouteImport.update({
   path: '/notices',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const WorkRoute = WorkRouteImport.update({
   id: '/work',
   path: '/work',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ComplaintsIndexRoute = ComplaintsIndexRouteImport.update({
+  id: '/complaints/',
+  path: '/complaints/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ComplaintsComplaintIdRoute = ComplaintsComplaintIdRouteImport.update({
+  id: '/complaints/$complaintId',
+  path: '/complaints/$complaintId',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -53,7 +71,10 @@ export interface FileRoutesByFullPath {
   '/gallery': typeof GalleryRoute
   '/home': typeof HomeRoute
   '/notices': typeof NoticesRoute
+  '/profile': typeof ProfileRoute
   '/work': typeof WorkRoute
+  '/complaints/$complaintId': typeof ComplaintsComplaintIdRoute
+  '/complaints/': typeof ComplaintsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -61,7 +82,10 @@ export interface FileRoutesByTo {
   '/gallery': typeof GalleryRoute
   '/home': typeof HomeRoute
   '/notices': typeof NoticesRoute
+  '/profile': typeof ProfileRoute
   '/work': typeof WorkRoute
+  '/complaints/$complaintId': typeof ComplaintsComplaintIdRoute
+  '/complaints': typeof ComplaintsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -70,13 +94,34 @@ export interface FileRoutesById {
   '/gallery': typeof GalleryRoute
   '/home': typeof HomeRoute
   '/notices': typeof NoticesRoute
+  '/profile': typeof ProfileRoute
   '/work': typeof WorkRoute
+  '/complaints/$complaintId': typeof ComplaintsComplaintIdRoute
+  '/complaints/': typeof ComplaintsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/attendance' | '/gallery' | '/home' | '/notices' | '/work'
+  fullPaths:
+    | '/'
+    | '/attendance'
+    | '/gallery'
+    | '/home'
+    | '/notices'
+    | '/profile'
+    | '/work'
+    | '/complaints/$complaintId'
+    | '/complaints/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/attendance' | '/gallery' | '/home' | '/notices' | '/work'
+  to:
+    | '/'
+    | '/attendance'
+    | '/gallery'
+    | '/home'
+    | '/notices'
+    | '/profile'
+    | '/work'
+    | '/complaints/$complaintId'
+    | '/complaints'
   id:
     | '__root__'
     | '/'
@@ -84,7 +129,10 @@ export interface FileRouteTypes {
     | '/gallery'
     | '/home'
     | '/notices'
+    | '/profile'
     | '/work'
+    | '/complaints/$complaintId'
+    | '/complaints/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -93,7 +141,10 @@ export interface RootRouteChildren {
   GalleryRoute: typeof GalleryRoute
   HomeRoute: typeof HomeRoute
   NoticesRoute: typeof NoticesRoute
+  ProfileRoute: typeof ProfileRoute
   WorkRoute: typeof WorkRoute
+  ComplaintsComplaintIdRoute: typeof ComplaintsComplaintIdRoute
+  ComplaintsIndexRoute: typeof ComplaintsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -133,11 +184,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof NoticesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/work': {
       id: '/work'
       path: '/work'
       fullPath: '/work'
       preLoaderRoute: typeof WorkRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/complaints/': {
+      id: '/complaints/'
+      path: '/complaints'
+      fullPath: '/complaints/'
+      preLoaderRoute: typeof ComplaintsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/complaints/$complaintId': {
+      id: '/complaints/$complaintId'
+      path: '/complaints/$complaintId'
+      fullPath: '/complaints/$complaintId'
+      preLoaderRoute: typeof ComplaintsComplaintIdRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -149,7 +221,10 @@ const rootRouteChildren: RootRouteChildren = {
   GalleryRoute: GalleryRoute,
   HomeRoute: HomeRoute,
   NoticesRoute: NoticesRoute,
+  ProfileRoute: ProfileRoute,
   WorkRoute: WorkRoute,
+  ComplaintsComplaintIdRoute: ComplaintsComplaintIdRoute,
+  ComplaintsIndexRoute: ComplaintsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
