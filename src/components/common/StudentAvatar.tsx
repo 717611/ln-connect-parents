@@ -4,9 +4,9 @@ import { cn } from "@/lib/utils";
 
 interface StudentAvatarProps {
   name: string;
-  photoUrl?: string | null;
-  className?: string;
-  ring?: boolean;
+  photoUrl?: string | null | undefined;
+  className?: string | undefined;
+  ring?: boolean | undefined;
 }
 
 export function StudentAvatar({ name, photoUrl, className, ring = true }: StudentAvatarProps) {

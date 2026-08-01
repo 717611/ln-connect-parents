@@ -5,10 +5,10 @@ import { Button } from "@/components/ui/button";
 import { LABELS } from "@/constants/labels";
 
 interface ErrorStateProps {
-  title?: string;
-  body?: string;
-  onRetry?: () => void;
-  className?: string;
+  title?: string | undefined;
+  body?: string | undefined;
+  onRetry?: (() => void) | undefined;
+  className?: string | undefined;
 }
 
 export function ErrorState({ title, body, onRetry, className }: ErrorStateProps) {

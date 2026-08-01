@@ -15,9 +15,9 @@ const TONE_CLASS: Record<IconTone, string> = {
 
 interface IconTileProps {
   icon: LucideIcon;
-  tone?: IconTone;
-  className?: string;
-  size?: "sm" | "md" | "lg";
+  tone?: IconTone | undefined;
+  className?: string | undefined;
+  size?: "sm" | "md" | "lg" | undefined;
 }
 
 const SIZE_CLASS = {

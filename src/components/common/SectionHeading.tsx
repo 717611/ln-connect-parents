@@ -6,10 +6,10 @@ import { cn } from "@/lib/utils";
 
 interface SectionHeadingProps {
   title: string;
-  actionTo?: string;
-  actionSearch?: Record<string, string>;
-  actionLabel?: string;
-  className?: string;
+  actionTo?: string | undefined;
+  actionSearch?: Record<string, string> | undefined;
+  actionLabel?: string | undefined;
+  className?: string | undefined;
 }
 
 export function SectionHeading({

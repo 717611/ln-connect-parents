@@ -6,9 +6,9 @@ import { cn } from "@/lib/utils";
 
 interface SectionCardProps {
   children: ReactNode;
-  className?: string;
-  padded?: boolean;
-  delay?: number;
+  className?: string | undefined;
+  padded?: boolean | undefined;
+  delay?: number | undefined;
 }
 
 /** The single rounded white surface used across the app. */

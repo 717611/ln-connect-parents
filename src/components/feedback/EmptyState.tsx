@@ -4,12 +4,12 @@ import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 interface EmptyStateProps {
-  icon?: LucideIcon;
-  illustrationSrc?: string;
+  icon?: LucideIcon | undefined;
+  illustrationSrc?: string | undefined;
   title: string;
-  body?: string;
-  action?: ReactNode;
-  className?: string;
+  body?: string | undefined;
+  action?: ReactNode | undefined;
+  className?: string | undefined;
 }
 
 export function EmptyState({

@@ -4,7 +4,7 @@ import { ErrorState } from "@/components/feedback/ErrorState";
 
 interface Props {
   children: ReactNode;
-  fallback?: ReactNode;
+  fallback?: ReactNode | undefined;
 }
 
 interface State {
@@ -13,13 +13,13 @@ interface State {
 
 /** Catches render errors so parents never see the default React crash screen. */
 export class ErrorBoundary extends Component<Props, State> {
-  state: State = { error: null };
+  override state: State = { error: null };
 
   static getDerivedStateFromError(error: Error): State {
     return { error };
   }
 
-  componentDidCatch(error: Error, info: ErrorInfo): void {
+  override componentDidCatch(error: Error, info: ErrorInfo): void {
     console.error("[ErrorBoundary]", error, info.componentStack);
   }
 
@@ -27,7 +27,7 @@ export class ErrorBoundary extends Component<Props, State> {
     this.setState({ error: null });
   };
 
-  render(): ReactNode {
+  override render(): ReactNode {
     if (this.state.error) {
       return (
         this.props.fallback ?? (

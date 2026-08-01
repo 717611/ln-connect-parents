@@ -5,8 +5,8 @@ import { Button } from "@/components/ui/button";
 import { LABELS } from "@/constants/labels";
 
 interface OfflineStateProps {
-  onRetry?: () => void;
-  className?: string;
+  onRetry?: (() => void) | undefined;
+  className?: string | undefined;
 }
 
 /** Reusable offline surface — usable full page or inside any card. */

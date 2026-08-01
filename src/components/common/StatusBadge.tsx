@@ -13,8 +13,8 @@ const TONE_CLASS: Record<BadgeTone, string> = {
 
 interface StatusBadgeProps {
   label: string;
-  tone?: BadgeTone;
-  className?: string;
+  tone?: BadgeTone | undefined;
+  className?: string | undefined;
 }
 
 export function StatusBadge({ label, tone = "neutral", className }: StatusBadgeProps) {
