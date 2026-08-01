@@ -1,11 +1,17 @@
 import { getFirebaseAuth } from "@/config/firebase";
 import { COLLECTIONS } from "@/constants/config";
 import { mockParent, mockSession } from "@/data/mockData";
+import {
+  logLoginDiagnostics,
+  logLoginError,
+  logLoginMatchCount,
+} from "@/lib/login-diagnostics";
 import type { AuthSession, LoginCredentials, Parent } from "@/models";
 
 import { getDocById, listDocs, useFirebase, where } from "./firestore/firestore.utils";
 import { mapParent, mapStudent } from "./firestore/mappers";
 import { resolveMock } from "./repository.utils";
+
 
 export interface IAuthRepository {
   login(credentials: LoginCredentials): Promise<AuthSession>;
