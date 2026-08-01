@@ -7,6 +7,7 @@ export const ROUTES = {
   home: "/home",
   work: "/work",
   notices: "/notices",
+  helpDesk: "/helpdesk",
   attendance: "/attendance",
   gallery: "/gallery",
   complaints: "/complaints",

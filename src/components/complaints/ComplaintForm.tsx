@@ -30,13 +30,15 @@ type FormValues = z.infer<typeof schema>;
 export function ComplaintForm({
   onSubmit,
   isSubmitting,
+  defaultCategory = "academics",
 }: {
   onSubmit: (input: NewComplaintInput) => void;
   isSubmitting: boolean;
+  defaultCategory?: ComplaintCategory | undefined;
 }) {
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { subject: "", category: "academics", description: "" },
+    defaultValues: { subject: "", category: defaultCategory, description: "" },
   });
 
   return (

@@ -67,7 +67,7 @@ function ComplaintDetailRoute() {
   };
 
   return (
-    <AppShell title={LABELS.complaints.title} showBack>
+    <AppShell title={LABELS.helpDesk.threadTitle} showBack>
       {complaintQuery.isPending ? (
         <ComplaintThreadSkeleton />
       ) : !complaint ? (

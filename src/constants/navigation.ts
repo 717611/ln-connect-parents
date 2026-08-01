@@ -1,6 +1,7 @@
 import {
   BookOpen,
   Bell,
+  Headset,
   CalendarCheck,
   House,
   Images,
@@ -20,10 +21,11 @@ export interface NavItem {
   exact?: boolean;
 }
 
-/** Bottom navigation — exactly four tabs. Complaints is a Home feature card. */
+/** Bottom navigation. The Home complaint card remains a quick CTA into the Help Desk. */
 export const BOTTOM_NAV_ITEMS: readonly NavItem[] = [
   { id: "home", label: "Home", to: ROUTES.home, icon: House, exact: true },
   { id: "work", label: "Work", to: ROUTES.work, icon: BookOpen },
+  { id: "helpdesk", label: "Help Desk", to: ROUTES.helpDesk, icon: Headset },
   { id: "notices", label: "Notices", to: ROUTES.notices, icon: Bell },
   { id: "profile", label: "Profile", to: ROUTES.profile, icon: User },
 ] as const;
