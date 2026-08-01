@@ -12,4 +12,8 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
+  // Vercel deployment target. Use "vercel" for serverless functions or "vercel-edge" for Edge Functions.
+  // The app uses the fetch API, so "vercel-edge" is the most direct translation from the Cloudflare dev preset.
+  nitro: { preset: "vercel-edge" },
 });
+
