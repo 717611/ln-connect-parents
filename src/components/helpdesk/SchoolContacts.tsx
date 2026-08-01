@@ -1,22 +1,26 @@
 import { Mail, Phone } from "lucide-react";
 
+import { IconTile } from "@/components/common/IconTile";
 import { SCHOOL_CONTACTS } from "@/constants/helpDesk";
 
-export function SchoolContactList() {
+export function SchoolContacts() {
   return (
     <div className="space-y-3">
       {SCHOOL_CONTACTS.map((contact) => (
         <div key={contact.id} className="surface-card p-4">
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <h3 className="text-sm font-semibold text-foreground">{contact.name}</h3>
+          <div className="flex items-start gap-3">
+            <IconTile icon={contact.icon} tone="secondary" />
+            <div className="min-w-0 flex-1">
+              <div className="flex items-start justify-between gap-3">
+                <h3 className="text-sm font-semibold text-foreground">{contact.name}</h3>
+                <p className="shrink-0 text-[10px] font-semibold uppercase tracking-wide text-accent">
+                  {contact.hours.split("·")[0]}
+                </p>
+              </div>
               <p className="mt-0.5 text-xs text-muted-foreground">{contact.role}</p>
+              <p className="mt-1 text-[11px] text-muted-foreground">{contact.hours}</p>
             </div>
-            <p className="shrink-0 text-[10px] font-semibold uppercase tracking-wide text-accent">
-              {contact.hours.split("·")[0]}
-            </p>
           </div>
-          <p className="mt-2 text-[11px] text-muted-foreground">{contact.hours}</p>
           <div className="mt-3 flex gap-2">
             <a
               href={`tel:${contact.phone.replace(/\s/g, "")}`}

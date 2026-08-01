@@ -1,15 +1,15 @@
 import { IconTile } from "@/components/common/IconTile";
-import { HELP_DESK_QUICK_ACTIONS } from "@/constants/helpDesk";
+import { SUPPORT_CATEGORIES } from "@/constants/helpDesk";
 import type { ComplaintCategory } from "@/models";
 
-export function HelpDeskQuickActions({
+export function SupportCategoryGrid({
   onSelect,
 }: {
   onSelect: (category: ComplaintCategory) => void;
 }) {
   return (
     <div className="grid grid-cols-2 gap-3">
-      {HELP_DESK_QUICK_ACTIONS.map((action) => (
+      {SUPPORT_CATEGORIES.map((action) => (
         <button
           key={action.id}
           type="button"

@@ -7,6 +7,8 @@ export type ComplaintCategory =
   | "fees"
   | "infrastructure"
   | "discipline"
+  | "wellbeing"
+  | "administration"
   | "other";
 export type ComplaintAuthorRole = "parent" | "school";
 
@@ -50,6 +52,8 @@ export const COMPLAINT_CATEGORY_LABEL: Record<ComplaintCategory, string> = {
   transport: "Transport",
   fees: "Fees",
   infrastructure: "Infrastructure",
-  discipline: "Discipline",
+  discipline: "Behaviour",
+  wellbeing: "Student Wellbeing",
+  administration: "Administration",
   other: "Other",
 };
