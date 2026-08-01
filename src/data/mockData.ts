@@ -410,17 +410,17 @@ export const mockGalleryAlbums: GalleryAlbum[] = [
   { id: "alb-classroom", name: "Classroom", kind: "classroom", coverPhotoId: "ph-9", photoCount: 4 },
 ];
 
-const galleryAspects = ["landscape", "portrait", "square"] as const;
+const galleryAspects: GalleryPhoto["aspect"][] = ["landscape", "portrait", "square"];
 
 export const mockGalleryPhotos: GalleryPhoto[] = Array.from({ length: 12 }, (_, index) => {
-  const album = mockGalleryAlbums[Math.floor(index / 4)];
+  const album = mockGalleryAlbums[Math.floor(index / 4)] ?? mockGalleryAlbums[0]!;
   return {
     id: `ph-${index + 1}`,
     albumId: album.id,
     title: `${album.name} moment ${(index % 4) + 1}`,
     imageUrl: ASSETS.galleryPlaceholder,
     capturedAt: iso("2026-07-14T10:00:00"),
-    aspect: galleryAspects[index % galleryAspects.length],
+    aspect: galleryAspects[index % galleryAspects.length]!,
   };
 });
 
