@@ -1,0 +1,15 @@
+export const queryKeys = {
+  parent: (parentId: string) => ["parent", parentId] as const,
+  student: (parentId: string) => ["student", "by-parent", parentId] as const,
+  classroom: (classroomId: string) => ["classroom", classroomId] as const,
+  homework: (classroomId: string) => ["homework", classroomId] as const,
+  classwork: (classroomId: string) => ["classwork", classroomId] as const,
+  notices: (scope: string, classroomId: string | null) => ["notices", scope, classroomId] as const,
+  galleryAlbums: () => ["gallery", "albums"] as const,
+  galleryPhotos: (albumId: string | null) => ["gallery", "photos", albumId] as const,
+  galleryLatest: (limit: number) => ["gallery", "latest", limit] as const,
+  complaints: (studentId: string) => ["complaints", studentId] as const,
+  complaint: (complaintId: string) => ["complaints", "detail", complaintId] as const,
+  complaintMessages: (complaintId: string) => ["complaints", "messages", complaintId] as const,
+  attendance: (studentId: string, month: string) => ["attendance", studentId, month] as const,
+} as const;
