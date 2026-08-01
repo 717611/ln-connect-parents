@@ -17,7 +17,7 @@ export function QuickAccessGrid() {
         >
           <Link
             to={item.to}
-            search={item.search}
+            {...(item.search ? { search: item.search } : {})}
             className="flex flex-col items-center gap-2 rounded-2xl py-1 text-center transition-transform active:scale-95"
           >
             <IconTile icon={item.icon} tone={item.tone} size="lg" />

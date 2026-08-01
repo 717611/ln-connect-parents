@@ -25,7 +25,7 @@ export function SectionHeading({
       {actionTo ? (
         <Link
           to={actionTo}
-          search={actionSearch}
+          {...(actionSearch ? { search: actionSearch } : {})}
           className="inline-flex items-center gap-0.5 text-xs font-semibold text-accent transition-opacity hover:opacity-75"
         >
           {actionLabel}
