@@ -1,11 +1,17 @@
 import { getFirebaseAuth } from "@/config/firebase";
 import { COLLECTIONS } from "@/constants/config";
 import { mockParent, mockSession } from "@/data/mockData";
+import {
+  logLoginDiagnostics,
+  logLoginError,
+  logLoginMatchCount,
+} from "@/lib/login-diagnostics";
 import type { AuthSession, LoginCredentials, Parent } from "@/models";
 
 import { getDocById, listDocs, useFirebase, where } from "./firestore/firestore.utils";
 import { mapParent, mapStudent } from "./firestore/mappers";
 import { resolveMock } from "./repository.utils";
+
 
 export interface IAuthRepository {
   login(credentials: LoginCredentials): Promise<AuthSession>;
@@ -38,39 +44,51 @@ const resolveLoginEmail = async (admissionNumber: string): Promise<string> => {
 
 export const AuthRepository: IAuthRepository = {
   async login(credentials) {
-    if (!credentials.admissionNumber.trim() || !credentials.password.trim()) {
+    const admission = credentials.admissionNumber.trim();
+    // TEMPORARY: diagnostics for verifying the live Firebase connection.
+    logLoginDiagnostics(admission, String(COLLECTIONS.students));
+
+    if (!admission || !credentials.password.trim()) {
       throw new Error("Admission number and password are required.");
     }
 
     if (useFirebase()) {
-      const { signInWithEmailAndPassword } = await import("firebase/auth");
-      const email = await resolveLoginEmail(credentials.admissionNumber.trim());
-      const cred = await signInWithEmailAndPassword(
-        getFirebaseAuth(),
-        email,
-        credentials.password,
-      );
-      const students = await listDocs(COLLECTIONS.students, [
-        where("admissionNumber", "==", credentials.admissionNumber.trim()),
-      ]);
-      const student = students[0] ? mapStudent(students[0]) : null;
-      return {
-        user: {
-          uid: cred.user.uid,
-          parentId: student?.parentId ?? cred.user.uid,
-          role: "parent",
-          admissionNumber: credentials.admissionNumber.trim(),
-          displayName: cred.user.displayName ?? student?.fullName ?? "Parent",
-        },
-        issuedAt: new Date().toISOString(),
-      };
+      try {
+        const { signInWithEmailAndPassword } = await import("firebase/auth");
+        const matches = await listDocs(COLLECTIONS.students, [
+          where("admissionNumber", "==", admission),
+        ]);
+        logLoginMatchCount(matches.length);
+        const email = await resolveLoginEmail(admission);
+        const cred = await signInWithEmailAndPassword(
+          getFirebaseAuth(),
+          email,
+          credentials.password,
+        );
+        const student = matches[0] ? mapStudent(matches[0]) : null;
+        return {
+          user: {
+            uid: cred.user.uid,
+            parentId: student?.parentId ?? cred.user.uid,
+            role: "parent",
+            admissionNumber: admission,
+            displayName: cred.user.displayName ?? student?.fullName ?? "Parent",
+          },
+          issuedAt: new Date().toISOString(),
+        };
+      } catch (error) {
+        logLoginError(error);
+        throw error;
+      }
     }
 
+    logLoginMatchCount(0);
     return resolveMock({
       ...mockSession,
       user: { ...mockSession.user, admissionNumber: credentials.admissionNumber },
     });
   },
+
 
   async logout() {
     if (useFirebase()) {
