@@ -417,7 +417,7 @@ export const mockGalleryPhotos: GalleryPhoto[] = Array.from({ length: 12 }, (_, 
   return {
     id: `ph-${index + 1}`,
     albumId: album.id,
-    title: `${album.name} moment ${（index % 4) + 1}`,
+    title: `${album.name} moment ${(index % 4) + 1}`,
     imageUrl: ASSETS.galleryPlaceholder,
     capturedAt: iso("2026-07-14T10:00:00"),
     aspect: galleryAspects[index % galleryAspects.length],
