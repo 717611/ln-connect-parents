@@ -1,4 +1,17 @@
-import { Bus, CreditCard, GraduationCap, Mail, MessageSquarePlus, Phone, type LucideIcon } from "lucide-react";
+import {
+  Bus,
+  Building2,
+  ClipboardList,
+  CreditCard,
+  GraduationCap,
+  HeartHandshake,
+  Mail,
+  MessageSquarePlus,
+  Phone,
+  ShieldAlert,
+  Users,
+  type LucideIcon,
+} from "lucide-react";
 
 import type { ComplaintCategory } from "@/models";
 
@@ -7,7 +20,7 @@ import type { ComplaintCategory } from "@/models";
  * Lightweight and easy to swap for Firestore-backed documents later.
  */
 
-export interface HelpDeskQuickAction {
+export interface SupportCategory {
   id: string;
   label: string;
   description: string;
@@ -16,7 +29,7 @@ export interface HelpDeskQuickAction {
   category: ComplaintCategory;
 }
 
-export const HELP_DESK_QUICK_ACTIONS: readonly HelpDeskQuickAction[] = [
+export const SUPPORT_CATEGORIES: readonly SupportCategory[] = [
   {
     id: "academics",
     label: "Academics",
@@ -24,6 +37,14 @@ export const HELP_DESK_QUICK_ACTIONS: readonly HelpDeskQuickAction[] = [
     icon: GraduationCap,
     tone: "primary",
     category: "academics",
+  },
+  {
+    id: "behaviour",
+    label: "Behaviour",
+    description: "Discipline or bullying",
+    icon: ShieldAlert,
+    tone: "secondary",
+    category: "discipline",
   },
   {
     id: "transport",
@@ -42,11 +63,35 @@ export const HELP_DESK_QUICK_ACTIONS: readonly HelpDeskQuickAction[] = [
     category: "fees",
   },
   {
+    id: "infrastructure",
+    label: "Infrastructure",
+    description: "Classroom, water, hygiene",
+    icon: Building2,
+    tone: "accent",
+    category: "infrastructure",
+  },
+  {
+    id: "wellbeing",
+    label: "Student Wellbeing",
+    description: "Health and counselling",
+    icon: HeartHandshake,
+    tone: "primary",
+    category: "wellbeing",
+  },
+  {
+    id: "administration",
+    label: "Administration",
+    description: "Records, ID, certificates",
+    icon: ClipboardList,
+    tone: "secondary",
+    category: "administration",
+  },
+  {
     id: "other",
-    label: "Something else",
+    label: "Other",
     description: "Any other concern",
     icon: MessageSquarePlus,
-    tone: "secondary",
+    tone: "success",
     category: "other",
   },
 ] as const;
@@ -58,6 +103,7 @@ export interface SchoolContact {
   phone: string;
   email: string;
   hours: string;
+  icon: LucideIcon;
 }
 
 export const SCHOOL_CONTACTS: readonly SchoolContact[] = [
@@ -68,6 +114,7 @@ export const SCHOOL_CONTACTS: readonly SchoolContact[] = [
     phone: "+91 90000 00000",
     email: "office@lnisranchi.in",
     hours: "Mon–Sat · 8:00 AM – 3:00 PM",
+    icon: Building2,
   },
   {
     id: "coordinator",
@@ -76,6 +123,7 @@ export const SCHOOL_CONTACTS: readonly SchoolContact[] = [
     phone: "+91 90000 00001",
     email: "academics@lnisranchi.in",
     hours: "Mon–Fri · 9:00 AM – 2:00 PM",
+    icon: GraduationCap,
   },
   {
     id: "transport",
@@ -84,10 +132,44 @@ export const SCHOOL_CONTACTS: readonly SchoolContact[] = [
     phone: "+91 90000 00002",
     email: "transport@lnisranchi.in",
     hours: "Mon–Sat · 7:00 AM – 5:00 PM",
+    icon: Bus,
+  },
+  {
+    id: "accounts",
+    name: "Accounts Office",
+    role: "Fees, receipts & refunds",
+    phone: "+91 90000 00003",
+    email: "accounts@lnisranchi.in",
+    hours: "Mon–Sat · 9:00 AM – 2:00 PM",
+    icon: CreditCard,
+  },
+  {
+    id: "principal",
+    name: "Principal Office",
+    role: "Escalations & appointments",
+    phone: "+91 90000 00004",
+    email: "principal@lnisranchi.in",
+    hours: "Mon–Fri · 11:00 AM – 1:00 PM",
+    icon: Users,
   },
 ] as const;
 
 export const CONTACT_ICONS = { phone: Phone, email: Mail } as const;
+
+export interface EmergencyContactInfo {
+  name: string;
+  description: string;
+  phone: string;
+  hours: string;
+}
+
+export const EMERGENCY_CONTACT: EmergencyContactInfo = {
+  name: "School Emergency Helpline",
+  description:
+    "For urgent safety, medical or transport situations involving your child, call this number right away.",
+  phone: "+91 90000 00911",
+  hours: "All working days · 7:00 AM – 7:00 PM",
+};
 
 export interface HelpDeskFaq {
   id: string;
@@ -98,9 +180,9 @@ export interface HelpDeskFaq {
 export const HELP_DESK_FAQS: readonly HelpDeskFaq[] = [
   {
     id: "response-time",
-    question: "How quickly will the school respond?",
+    question: "How quickly does the school respond?",
     answer:
-      "Most requests receive a first reply within one working day. Urgent transport or safety concerns are looked at the same day.",
+      "Most requests receive a first reply within one working day. Urgent transport, safety or medical concerns are looked at the same day.",
   },
   {
     id: "track",
@@ -109,15 +191,15 @@ export const HELP_DESK_FAQS: readonly HelpDeskFaq[] = [
       "Every request gets a ticket number. Open it from My Requests to read replies from the school and continue the conversation.",
   },
   {
-    id: "private",
-    question: "Can other parents see my request?",
+    id: "update",
+    question: "Can I update my complaint?",
     answer:
-      "No. Each conversation is private between you and the school office. Nothing you write is visible to other parents.",
+      "Yes. Open the request and send another message in the same thread — new details are added to the existing ticket instead of a new one.",
   },
   {
-    id: "call",
-    question: "Can I speak to someone directly?",
+    id: "private",
+    question: "Who can read my messages?",
     answer:
-      "Yes. Use School Contacts above to call the right desk during working hours, or reply in your request thread any time.",
+      "Only the school staff handling your request. Each conversation is private between you and the school office, and no other parent can see it.",
   },
 ] as const;
