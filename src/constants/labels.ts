@@ -80,6 +80,21 @@ export const LABELS = {
     emptyTitle: "No complaints raised",
     emptyBody: "When you raise a concern it will be tracked here privately.",
   },
+  helpDesk: {
+    navLabel: "Help Desk",
+    title: "Parents Help Desk",
+    intro: "We are here to help",
+    introBody:
+      "Start a request, call the right desk, or read answers to common questions — all in one place.",
+    quickActions: "What do you need help with?",
+    newRequest: "New Request",
+    myRequests: "My Requests",
+    contacts: "School Contacts",
+    faqs: "Common Questions",
+    threadTitle: "Request",
+    emptyTitle: "No requests yet",
+    emptyBody: "Raise a request and the school will reply here privately.",
+  },
   profile: {
     title: "Profile",
     admissionNumber: "Admission Number",
