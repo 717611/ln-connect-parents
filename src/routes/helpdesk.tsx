@@ -12,6 +12,7 @@ import { PolicyVault } from "@/components/helpdesk/PolicyVault";
 import { QuickLinks } from "@/components/helpdesk/QuickLinks";
 import { RequestList } from "@/components/helpdesk/RequestList";
 import { SchoolContacts } from "@/components/helpdesk/SchoolContacts";
+import { SupportCategoryGrid } from "@/components/helpdesk/SupportCategoryGrid";
 import { AppShell } from "@/components/layout/AppShell";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { LABELS } from "@/constants/labels";
@@ -77,7 +78,7 @@ function HelpDeskRoute() {
 
         <section>
           <SectionHeading title={LABELS.helpDesk.categories} />
-          <SupportCategorySection onSelect={openSheet} />
+          <SupportCategoryGrid onSelect={openSheet} />
         </section>
 
         <section>
@@ -132,9 +133,3 @@ function HelpDeskRoute() {
     </AppShell>
   );
 }
-
-function SupportCategorySection({ onSelect }: { onSelect: (c: ComplaintCategory) => void }) {
-  return <SupportCategoryGrid onSelect={onSelect} />;
-}
-
-export { SupportCategoryGrid } from "@/components/helpdesk/SupportCategoryGrid";
