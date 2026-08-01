@@ -92,12 +92,17 @@ function LoginScreen() {
     <div className="relative min-h-screen overflow-hidden bg-secondary">
       <img
         src={ASSETS.loginSchool}
-        alt="LN International School campus"
-        width={1280}
-        height={1920}
-        className="absolute inset-0 size-full scale-105 object-cover blur-[2px]"
+        alt=""
+        aria-hidden="true"
+        width={1122}
+        height={1402}
+        loading="lazy"
+        decoding="async"
+        className="absolute inset-0 size-full scale-105 object-cover object-center blur-[1.5px] brightness-[0.82] saturate-[0.85]"
       />
-      <div className="absolute inset-0 bg-gradient-to-b from-secondary/70 via-secondary/85 to-secondary" />
+      <div className="absolute inset-0 bg-secondary/50" />
+      <div className="absolute inset-0 bg-gradient-to-b from-secondary/35 via-secondary/60 to-secondary/95" />
+
 
       <div className="relative mx-auto flex min-h-screen w-full max-w-lg flex-col px-6 pb-10 pt-16">
         <motion.div
