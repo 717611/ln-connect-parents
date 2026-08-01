@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AttendanceRouteImport } from './routes/attendance'
 import { Route as GalleryRouteImport } from './routes/gallery'
+import { Route as HelpdeskRouteImport } from './routes/helpdesk'
 import { Route as HomeRouteImport } from './routes/home'
 import { Route as NoticesRouteImport } from './routes/notices'
 import { Route as ProfileRouteImport } from './routes/profile'
@@ -32,6 +33,11 @@ const AttendanceRoute = AttendanceRouteImport.update({
 const GalleryRoute = GalleryRouteImport.update({
   id: '/gallery',
   path: '/gallery',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HelpdeskRoute = HelpdeskRouteImport.update({
+  id: '/helpdesk',
+  path: '/helpdesk',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HomeRoute = HomeRouteImport.update({
@@ -69,6 +75,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/attendance': typeof AttendanceRoute
   '/gallery': typeof GalleryRoute
+  '/helpdesk': typeof HelpdeskRoute
   '/home': typeof HomeRoute
   '/notices': typeof NoticesRoute
   '/profile': typeof ProfileRoute
@@ -80,6 +87,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/attendance': typeof AttendanceRoute
   '/gallery': typeof GalleryRoute
+  '/helpdesk': typeof HelpdeskRoute
   '/home': typeof HomeRoute
   '/notices': typeof NoticesRoute
   '/profile': typeof ProfileRoute
@@ -92,6 +100,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/attendance': typeof AttendanceRoute
   '/gallery': typeof GalleryRoute
+  '/helpdesk': typeof HelpdeskRoute
   '/home': typeof HomeRoute
   '/notices': typeof NoticesRoute
   '/profile': typeof ProfileRoute
@@ -105,6 +114,7 @@ export interface FileRouteTypes {
     | '/'
     | '/attendance'
     | '/gallery'
+    | '/helpdesk'
     | '/home'
     | '/notices'
     | '/profile'
@@ -116,6 +126,7 @@ export interface FileRouteTypes {
     | '/'
     | '/attendance'
     | '/gallery'
+    | '/helpdesk'
     | '/home'
     | '/notices'
     | '/profile'
@@ -127,6 +138,7 @@ export interface FileRouteTypes {
     | '/'
     | '/attendance'
     | '/gallery'
+    | '/helpdesk'
     | '/home'
     | '/notices'
     | '/profile'
@@ -139,6 +151,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AttendanceRoute: typeof AttendanceRoute
   GalleryRoute: typeof GalleryRoute
+  HelpdeskRoute: typeof HelpdeskRoute
   HomeRoute: typeof HomeRoute
   NoticesRoute: typeof NoticesRoute
   ProfileRoute: typeof ProfileRoute
@@ -168,6 +181,13 @@ declare module '@tanstack/react-router' {
       path: '/gallery'
       fullPath: '/gallery'
       preLoaderRoute: typeof GalleryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/helpdesk': {
+      id: '/helpdesk'
+      path: '/helpdesk'
+      fullPath: '/helpdesk'
+      preLoaderRoute: typeof HelpdeskRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/home': {
@@ -219,6 +239,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AttendanceRoute: AttendanceRoute,
   GalleryRoute: GalleryRoute,
+  HelpdeskRoute: HelpdeskRoute,
   HomeRoute: HomeRoute,
   NoticesRoute: NoticesRoute,
   ProfileRoute: ProfileRoute,
