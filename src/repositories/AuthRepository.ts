@@ -1,6 +1,6 @@
 import { getFirebaseAuth } from "@/config/firebase";
 import { COLLECTIONS } from "@/constants/config";
-import { mockParent, mockSession } from "@/data/mockData";
+import { mockParent } from "@/data/mockData";
 import {
   logLoginDiagnostics,
   logLoginError,
@@ -10,6 +10,23 @@ import type { AuthSession, LoginCredentials, Parent } from "@/models";
 
 import { getDocById, listDocs, useFirebase, where } from "./firestore/firestore.utils";
 import { mapParent, mapStudent } from "./firestore/mappers";
+
+/** Password reset still needs an email; resolve it from the student/parent records. */
+const resolveLoginEmail = async (admissionNumber: string): Promise<string> => {
+  if (admissionNumber.includes("@")) return admissionNumber;
+  const students = await listDocs(COLLECTIONS.students, [
+    where("admissionNo", "==", admissionNumber),
+  ]);
+  const first = students[0];
+  if (!first) throw new Error("No student found for this admission number.");
+  const student = mapStudent(first);
+  const parentRaw = student.parentId
+    ? await getDocById(COLLECTIONS.parents, student.parentId)
+    : null;
+  const email = parentRaw ? mapParent(parentRaw).email : null;
+  if (!email) throw new Error("No login email is linked to this admission number.");
+  return email;
+};
 import { resolveMock } from "./repository.utils";
 
 
