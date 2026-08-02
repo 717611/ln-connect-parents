@@ -38,31 +38,6 @@ export interface IAuthRepository {
   changePassword(currentPassword: string, newPassword: string): Promise<void>;
 }
 
-/** SHA-256 hex digest (lowercase) — same hashing the School Portal uses. */
-const sha256Hex = async (value: string): Promise<string> => {
-  const bytes = new TextEncoder().encode(value);
-  const digest = await crypto.subtle.digest("SHA-256", bytes);
-  return Array.from(new Uint8Array(digest))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("")
-    .toLowerCase();
-};
-
-/** Accepts plain-text (legacy), lowercase hex hash, and uppercase hex hash. */
-const isPasswordValid = (
-  storedPassword: unknown,
-  inputPlain: string,
-  computedHash: string,
-): boolean => {
-  if (typeof storedPassword !== "string") return false;
-  const stored = storedPassword.trim();
-  if (!stored) return false;
-  return (
-    stored === inputPlain ||
-    stored.toLowerCase() === computedHash ||
-    stored === computedHash.toUpperCase()
-  );
-};
 
 export const AuthRepository: IAuthRepository = {
   async login(credentials) {
