@@ -1,6 +1,6 @@
 import { getFirebaseAuth } from "@/config/firebase";
 import { COLLECTIONS } from "@/constants/config";
-import { mockParent, mockSession } from "@/data/mockData";
+import { mockParent } from "@/data/mockData";
 import {
   logLoginDiagnostics,
   logLoginError,
@@ -10,26 +10,12 @@ import type { AuthSession, LoginCredentials, Parent } from "@/models";
 
 import { getDocById, listDocs, useFirebase, where } from "./firestore/firestore.utils";
 import { mapParent, mapStudent } from "./firestore/mappers";
-import { resolveMock } from "./repository.utils";
 
-
-export interface IAuthRepository {
-  login(credentials: LoginCredentials): Promise<AuthSession>;
-  logout(): Promise<void>;
-  getCurrentParent(parentId: string): Promise<Parent>;
-  requestPasswordReset(admissionNumber: string): Promise<void>;
-  changePassword(currentPassword: string, newPassword: string): Promise<void>;
-}
-
-/**
- * The School Portal identifies parents by admission number. Firebase Auth needs
- * an email, so we resolve it from the student document (falling back to the
- * admission number itself when the school issues email logins).
- */
+/** Password reset still needs an email; resolve it from the student/parent records. */
 const resolveLoginEmail = async (admissionNumber: string): Promise<string> => {
   if (admissionNumber.includes("@")) return admissionNumber;
   const students = await listDocs(COLLECTIONS.students, [
-    where("admissionNumber", "==", admissionNumber),
+    where("admissionNo", "==", admissionNumber),
   ]);
   const first = students[0];
   if (!first) throw new Error("No student found for this admission number.");
@@ -41,53 +27,86 @@ const resolveLoginEmail = async (admissionNumber: string): Promise<string> => {
   if (!email) throw new Error("No login email is linked to this admission number.");
   return email;
 };
+import { resolveMock } from "./repository.utils";
+
+
+export interface IAuthRepository {
+  login(credentials: LoginCredentials): Promise<AuthSession>;
+  logout(): Promise<void>;
+  getCurrentParent(parentId: string): Promise<Parent>;
+  requestPasswordReset(admissionNumber: string): Promise<void>;
+  changePassword(currentPassword: string, newPassword: string): Promise<void>;
+}
+
+/** SHA-256 hex digest — same hashing the School Portal uses for stored passwords. */
+const sha256Hex = async (value: string): Promise<string> => {
+  const bytes = new TextEncoder().encode(value);
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  return Array.from(new Uint8Array(digest))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+};
 
 export const AuthRepository: IAuthRepository = {
   async login(credentials) {
     const admission = credentials.admissionNumber.trim();
+    const password = credentials.password;
     // TEMPORARY: diagnostics for verifying the live Firebase connection.
-    logLoginDiagnostics(admission, String(COLLECTIONS.students));
+    logLoginDiagnostics(admission, "users");
 
-    if (!admission || !credentials.password.trim()) {
+    if (!admission || !password.trim()) {
       throw new Error("Admission number and password are required.");
     }
 
-    if (useFirebase()) {
-      try {
-        const { signInWithEmailAndPassword } = await import("firebase/auth");
-        const matches = await listDocs(COLLECTIONS.students, [
-          where("admissionNumber", "==", admission),
-        ]);
-        logLoginMatchCount(matches.length);
-        const email = await resolveLoginEmail(admission);
-        const cred = await signInWithEmailAndPassword(
-          getFirebaseAuth(),
-          email,
-          credentials.password,
-        );
-        const student = matches[0] ? mapStudent(matches[0]) : null;
-        return {
-          user: {
-            uid: cred.user.uid,
-            parentId: student?.parentId ?? cred.user.uid,
-            role: "parent",
-            admissionNumber: admission,
-            displayName: cred.user.displayName ?? student?.fullName ?? "Parent",
-          },
-          issuedAt: new Date().toISOString(),
-        };
-      } catch (error) {
-        logLoginError(error);
-        throw error;
-      }
+    // Production must never silently fall back to mock data.
+    if (!useFirebase()) {
+      throw new Error(
+        "Firebase is not configured. Set the VITE_FIREBASE_* environment variables to sign in.",
+      );
     }
 
-    logLoginMatchCount(0);
-    return resolveMock({
-      ...mockSession,
-      user: { ...mockSession.user, admissionNumber: credentials.admissionNumber },
-    });
+    try {
+      // 1. School Portal contract: users/username.
+      let docs = await listDocs("users", [where("username", "==", admission)]);
+      // 2. Fallback: students/admissionNo.
+      if (docs.length === 0) {
+        docs = await listDocs(COLLECTIONS.students, [where("admissionNo", "==", admission)]);
+      }
+      logLoginMatchCount(docs.length);
+      const userDoc = docs[0];
+      if (!userDoc) throw new Error("No student found for this admission number.");
+
+      const stored = typeof userDoc["password"] === "string" ? (userDoc["password"] as string) : "";
+      const hashed = await sha256Hex(password);
+      if (stored !== hashed && stored !== password) {
+        throw new Error("Invalid password.");
+      }
+
+      const parentId =
+        (typeof userDoc["parentId"] === "string" && userDoc["parentId"]) ||
+        (typeof userDoc["studentId"] === "string" && userDoc["studentId"]) ||
+        userDoc.id;
+      const displayName =
+        (typeof userDoc["fullName"] === "string" && userDoc["fullName"]) ||
+        (typeof userDoc["name"] === "string" && userDoc["name"]) ||
+        "Parent";
+
+      return {
+        user: {
+          uid: userDoc.id,
+          parentId,
+          role: "parent",
+          admissionNumber: admission,
+          displayName,
+        },
+        issuedAt: new Date().toISOString(),
+      };
+    } catch (error) {
+      logLoginError(error);
+      throw error;
+    }
   },
+
 
 
   async logout() {
