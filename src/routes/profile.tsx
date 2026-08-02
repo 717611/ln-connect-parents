@@ -89,12 +89,12 @@ function ProfileRoute() {
             <Separator />
             <ProfileField
               label={LABELS.profile.parentName}
-              value={parent?.fullName ?? session?.user.displayName ?? "—"}
+              value={parent?.fullName || student.parentName || session?.user.displayName || "—"}
             />
             <Separator />
             <ProfileField
               label={LABELS.profile.mobileNumber}
-              value={parent?.mobileNumber ?? "—"}
+              value={parent?.mobileNumber || student.parentMobile || "—"}
             />
           </SectionCard>
 
