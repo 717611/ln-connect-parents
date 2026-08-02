@@ -62,7 +62,7 @@ function ComplaintDetailRoute() {
 
   return (
     <AppShell title={LABELS.helpDesk.threadTitle} showBack>
-      {complaintQuery.isPending ? (
+      {isPending ? (
         <ComplaintThreadSkeleton />
       ) : !complaint ? (
         <div className="surface-card">
@@ -97,8 +97,10 @@ function ComplaintDetailRoute() {
           </SectionCard>
 
           <div className="space-y-3">
-            {messagesQuery.isPending ? (
-              <ComplaintThreadSkeleton count={3} />
+            {messages.length === 0 ? (
+              <p className="py-4 text-center text-xs text-muted-foreground">
+                No replies yet. The school will respond in this thread.
+              </p>
             ) : (
               messages.map((message) => (
                 <ComplaintMessageBubble key={message.id} message={message} />
