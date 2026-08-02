@@ -94,3 +94,23 @@ export const patchDoc = async (
   const [first, ...rest] = segments as [string, ...string[]];
   await updateDoc(doc(getFirestoreDb(), first, ...rest, id), payload);
 };
+
+/** Live document subscription. Returns the unsubscribe handle. */
+export const subscribeDoc = (
+  path: string | string[],
+  id: string,
+  onNext: (raw: RawDoc | null) => void,
+  onError?: (error: unknown) => void,
+): (() => void) => {
+  const segments = Array.isArray(path) ? path : [path];
+  const [first, ...rest] = segments as [string, ...string[]];
+  const ref = doc(getFirestoreDb(), first, ...rest, id);
+  return onSnapshot(
+    ref,
+    (snap) => onNext(snap.exists() ? { id: snap.id, ...snap.data() } : null),
+    (error) => {
+      console.error("[firestore] snapshot failed", error);
+      onError?.(error);
+    },
+  );
+};
