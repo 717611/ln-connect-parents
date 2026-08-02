@@ -39,6 +39,7 @@ export const COLLECTIONS = {
   homework: "homework",
   classwork: "classwork",
   notices: "notices",
+  helpdesk: "helpdesk",
   complaints: "complaints",
   complaintMessages: "messages",
   attendance: "attendance",

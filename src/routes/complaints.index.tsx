@@ -14,6 +14,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { LABELS } from "@/constants/labels";
 import { useComplaints, useCreateComplaint } from "@/hooks/useComplaints";
 import { useStudentProfile } from "@/hooks/useStudentProfile";
+import { formatClassSection } from "@/models";
 
 export const Route = createFileRoute("/complaints/")({
   head: () => ({
@@ -40,7 +41,11 @@ function ComplaintsRoute() {
   const studentId = student?.id ?? null;
 
   const complaintsQuery = useComplaints(studentId);
-  const createComplaint = useCreateComplaint(studentId);
+  const createComplaint = useCreateComplaint(studentId, {
+    studentName: student?.fullName || "Student",
+    admissionNumber: student?.admissionNumber || "",
+    className: formatClassSection(student),
+  });
   const complaints = complaintsQuery.data ?? [];
 
   return (

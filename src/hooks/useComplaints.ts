@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { APP_CONFIG } from "@/constants/config";
-import type { NewComplaintInput } from "@/models";
+import type { ComplaintStudentContext, NewComplaintInput } from "@/models";
 import { complaintService } from "@/services/complaintService";
 
 import { queryKeys } from "./queryKeys";
@@ -31,10 +31,10 @@ export function useComplaintMessages(complaintId: string) {
   });
 }
 
-export function useCreateComplaint(studentId: string | null) {
+export function useCreateComplaint(studentId: string | null, context?: ComplaintStudentContext) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (input: NewComplaintInput) => complaintService.create(studentId!, input),
+    mutationFn: (input: NewComplaintInput) => complaintService.create(studentId!, input, context),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.complaints(studentId ?? "none") });
     },

@@ -40,6 +40,13 @@ export interface NewComplaintInput {
   description: string;
 }
 
+/** Student details stored alongside a ticket so the School Portal can triage it. */
+export interface ComplaintStudentContext {
+  studentName?: string;
+  admissionNumber?: string;
+  className?: string;
+}
+
 export const COMPLAINT_STATUS_LABEL: Record<ComplaintStatus, string> = {
   open: "Open",
   in_progress: "In Progress",
