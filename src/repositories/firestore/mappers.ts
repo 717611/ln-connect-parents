@@ -28,7 +28,6 @@ import type {
   Parent,
   ParentRelation,
   Student,
-  SubjectAttendance,
   Teacher,
 } from "@/models";
 
@@ -36,6 +35,15 @@ import { num, str, strList, toIso, type RawDoc } from "./firestore.utils";
 
 const pick = <T extends string>(value: unknown, allowed: readonly T[], fallback: T): T =>
   allowed.includes(value as T) ? (value as T) : fallback;
+
+/** First non-empty string among School Portal field aliases. */
+const firstStr = (raw: RawDoc, keys: string[], fallback = ""): string => {
+  for (const key of keys) {
+    const value = str(raw[key]).trim();
+    if (value) return value;
+  }
+  return fallback;
+};
 
 export const mapStudent = (raw: RawDoc): Student => ({
   id: raw.id,
@@ -47,10 +55,21 @@ export const mapStudent = (raw: RawDoc): Student => ({
   section: str(raw["section"]),
   rollNumber: str(raw["rollNumber"] ?? raw["rollNo"]),
   parentId: str(raw["parentId"]),
+  parentName: firstStr(
+    raw,
+    ["parentName", "fatherName", "guardianName", "motherName"],
+    "Parent",
+  ),
+  parentMobile: firstStr(
+    raw,
+    ["parentMobile", "parentPhone", "phone", "mobile", "contactNumber"],
+    "N/A",
+  ),
   dateOfBirth: raw["dateOfBirth"] ? toIso(raw["dateOfBirth"]) : null,
   bloodGroup: str(raw["bloodGroup"]) || null,
   isActive: raw["isActive"] !== false,
 });
+
 
 export const mapParent = (raw: RawDoc): Parent => ({
   id: raw.id,
