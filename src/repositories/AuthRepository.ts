@@ -38,23 +38,40 @@ export interface IAuthRepository {
   changePassword(currentPassword: string, newPassword: string): Promise<void>;
 }
 
-/** SHA-256 hex digest — same hashing the School Portal uses for stored passwords. */
+/** SHA-256 hex digest (lowercase) — same hashing the School Portal uses. */
 const sha256Hex = async (value: string): Promise<string> => {
   const bytes = new TextEncoder().encode(value);
   const digest = await crypto.subtle.digest("SHA-256", bytes);
   return Array.from(new Uint8Array(digest))
     .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
+    .join("")
+    .toLowerCase();
+};
+
+/** Accepts plain-text (legacy), lowercase hex hash, and uppercase hex hash. */
+const isPasswordValid = (
+  storedPassword: unknown,
+  inputPlain: string,
+  computedHash: string,
+): boolean => {
+  if (typeof storedPassword !== "string") return false;
+  const stored = storedPassword.trim();
+  if (!stored) return false;
+  return (
+    stored === inputPlain ||
+    stored.toLowerCase() === computedHash ||
+    stored === computedHash.toUpperCase()
+  );
 };
 
 export const AuthRepository: IAuthRepository = {
   async login(credentials) {
-    const admission = credentials.admissionNumber.trim();
-    const password = credentials.password;
+    const cleanUsername = credentials.admissionNumber.trim();
+    const cleanInput = credentials.password.trim();
     // TEMPORARY: diagnostics for verifying the live Firebase connection.
-    logLoginDiagnostics(admission, "users");
+    logLoginDiagnostics(cleanUsername, "users");
 
-    if (!admission || !password.trim()) {
+    if (!cleanUsername || !cleanInput) {
       throw new Error("Admission number and password are required.");
     }
 
@@ -65,22 +82,35 @@ export const AuthRepository: IAuthRepository = {
       );
     }
 
+    const admission = cleanUsername;
+
     try {
       // 1. School Portal contract: users/username.
-      let docs = await listDocs("users", [where("username", "==", admission)]);
+      let docs = await listDocs("users", [where("username", "==", cleanUsername)]);
+      let fromUsers = docs.length > 0;
       // 2. Fallback: students/admissionNo.
       if (docs.length === 0) {
-        docs = await listDocs(COLLECTIONS.students, [where("admissionNo", "==", admission)]);
+        docs = await listDocs(COLLECTIONS.students, [where("admissionNo", "==", cleanUsername)]);
       }
       logLoginMatchCount(docs.length);
       const userDoc = docs[0];
       if (!userDoc) throw new Error("No student found for this admission number.");
 
-      const stored = typeof userDoc["password"] === "string" ? (userDoc["password"] as string) : "";
-      const hashed = await sha256Hex(password);
-      if (stored !== hashed && stored !== password) {
+      const computedHash = await sha256Hex(cleanInput);
+      let valid = isPasswordValid(userDoc["password"], cleanInput, computedHash);
+
+      // Fallback: check the student record's password when users/ fails or lacks one.
+      if (!valid && fromUsers) {
+        const students = await listDocs(COLLECTIONS.students, [
+          where("admissionNo", "==", cleanUsername),
+        ]);
+        valid = students.some((s) => isPasswordValid(s["password"], cleanInput, computedHash));
+      }
+
+      if (!valid) {
         throw new Error("Invalid password.");
       }
+
 
       const parentId =
         (typeof userDoc["parentId"] === "string" && userDoc["parentId"]) ||
