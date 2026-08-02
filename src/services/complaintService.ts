@@ -1,4 +1,4 @@
-import type { Complaint, ComplaintMessage, NewComplaintInput } from "@/models";
+import type { Complaint, ComplaintMessage, ComplaintStudentContext, NewComplaintInput } from "@/models";
 import { ComplaintRepository } from "@/repositories/ComplaintRepository";
 
 export const complaintService = {
@@ -15,8 +15,12 @@ export const complaintService = {
   listMessages(complaintId: string): Promise<ComplaintMessage[]> {
     return ComplaintRepository.listMessages(complaintId);
   },
-  create(studentId: string, input: NewComplaintInput): Promise<Complaint> {
-    return ComplaintRepository.create(studentId, input);
+  create(
+    studentId: string,
+    input: NewComplaintInput,
+    context?: ComplaintStudentContext,
+  ): Promise<Complaint> {
+    return ComplaintRepository.create(studentId, input, context);
   },
   sendMessage(complaintId: string, authorName: string, body: string): Promise<ComplaintMessage> {
     return ComplaintRepository.sendMessage(complaintId, authorName, body);
