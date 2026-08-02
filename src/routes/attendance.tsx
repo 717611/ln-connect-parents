@@ -37,9 +37,9 @@ export const Route = createFileRoute("/attendance")({
 const WEEKDAYS = ["S", "M", "T", "W", "T", "F", "S"] as const;
 
 const TILE_STYLES: Record<AttendanceStatus, string> = {
-  present: "bg-[color-mix(in_oklch,var(--success)_18%,transparent)] text-success",
-  absent: "bg-[color-mix(in_oklch,var(--destructive)_16%,transparent)] text-destructive",
-  late: "bg-[color-mix(in_oklch,var(--warning,var(--accent))_18%,transparent)] text-accent-foreground",
+  present: "bg-success-soft text-success",
+  absent: "bg-destructive-soft text-destructive",
+  late: "bg-warning-soft text-warning-foreground",
   holiday: "bg-muted text-muted-foreground",
   unmarked: "bg-transparent text-muted-foreground/60",
 };
@@ -47,7 +47,7 @@ const TILE_STYLES: Record<AttendanceStatus, string> = {
 const DOT_STYLES: Record<AttendanceStatus, string> = {
   present: "bg-success",
   absent: "bg-destructive",
-  late: "bg-accent",
+  late: "bg-warning",
   holiday: "bg-muted-foreground/50",
   unmarked: "bg-transparent",
 };
@@ -226,7 +226,7 @@ function AttendanceRoute() {
                       </div>
                       <StatusBadge
                         label={ATTENDANCE_STATUS_LABEL[day.status]}
-                        tone={day.status === "absent" ? "danger" : "accent"}
+                        tone={day.status === "absent" ? "danger" : "warning"}
                       />
                     </li>
                   ))}
