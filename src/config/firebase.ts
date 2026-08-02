@@ -26,7 +26,9 @@ export interface FirebaseConfig {
 }
 
 const env = import.meta.env as Record<string, string | undefined>;
-const read = (key: string): string => env[key]?.trim() ?? "";
+/** Reads VITE_* first, then falls back to the NEXT_PUBLIC_* name (School Portal parity). */
+const read = (key: string): string =>
+  env[key]?.trim() || env[key.replace(/^VITE_/, "NEXT_PUBLIC_")]?.trim() || "";
 
 /**
  * Custom Firestore database ID shared with the School Portal. It can be
