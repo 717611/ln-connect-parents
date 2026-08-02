@@ -39,8 +39,8 @@ export const greeting = (date: Date = new Date()): string => {
   return "Good Evening";
 };
 
-export const initials = (name: string): string =>
-  name
+export const initials = (name: string | null | undefined): string =>
+  (name || "Student")
     .split(" ")
     .filter(Boolean)
     .slice(0, 2)

@@ -16,4 +16,6 @@ export interface Student {
 }
 
 export const formatClassSection = (student: Pick<Student, "className" | "section">): string =>
-  `Class ${student.className}-${student.section}`;
+  `Class ${(student.className || "").split("-")[0] || "—"}${
+    student.section ? `-${student.section}` : ""
+  }`;

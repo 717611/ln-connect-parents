@@ -133,6 +133,10 @@ export const AuthRepository: IAuthRepository = {
           role: "parent",
           admissionNumber: admission,
           displayName,
+          email:
+            (typeof sourceDoc["email"] === "string" && sourceDoc["email"]) ||
+            (typeof sourceDoc["parentEmail"] === "string" && sourceDoc["parentEmail"]) ||
+            null,
         },
         issuedAt: new Date().toISOString(),
       };

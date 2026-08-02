@@ -48,17 +48,17 @@ function HomeRoute() {
 
   const header = (
     <div className="flex items-center gap-3">
-      <StudentAvatar name={student?.fullName ?? "Student"} photoUrl={student?.photoUrl} />
+      <StudentAvatar name={student?.fullName || "Student"} photoUrl={student?.photoUrl} />
       <div className="min-w-0">
         <p className="text-xs text-muted-foreground">
           {greeting()}
-          {parent ? `, ${parent.fullName.split(" ")[0]}` : ""}
+          {parent?.fullName ? `, ${(parent.fullName || "").split(" ")[0]}` : ""}
         </p>
         <p className="truncate font-display text-base font-semibold text-foreground">
-          {student?.fullName ?? "Loading…"}
+          {(student?.fullName || "").split(" ").slice(0, 3).join(" ") || "Loading…"}
         </p>
         <p className="truncate text-[11px] text-muted-foreground">
-          {student ? `${formatClassSection(student)} · Roll ${student.rollNumber}` : ""}
+          {student ? `${formatClassSection(student)} · Roll ${student.rollNumber || "—"}` : ""}
         </p>
       </div>
     </div>

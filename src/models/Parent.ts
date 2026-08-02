@@ -18,6 +18,7 @@ export interface AuthUser {
   role: UserRole;
   admissionNumber: string;
   displayName: string;
+  email?: string | null;
 }
 
 export interface AuthSession {
