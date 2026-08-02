@@ -11,17 +11,20 @@ import { useAuth } from "./useAuth";
 export function useStudentProfile() {
   const { session } = useAuth();
   const parentId = session?.user.parentId ?? null;
+  const admissionNumber = session?.user.admissionNumber ?? null;
+  const email = session?.user.email ?? null;
 
   const parentQuery = useQuery({
     queryKey: queryKeys.parent(parentId ?? "anonymous"),
     queryFn: () => authService.getParent(parentId!),
     enabled: Boolean(parentId),
     staleTime: APP_CONFIG.queryStaleTimeMs,
+    retry: false,
   });
 
   const studentQuery = useQuery({
     queryKey: queryKeys.student(parentId ?? "anonymous"),
-    queryFn: () => studentService.getStudentByParent(parentId!),
+    queryFn: () => studentService.getStudentByParent(parentId!, { admissionNumber, email }),
     enabled: Boolean(parentId),
     staleTime: APP_CONFIG.queryStaleTimeMs,
   });
@@ -29,8 +32,8 @@ export function useStudentProfile() {
   return {
     parent: parentQuery.data ?? null,
     student: studentQuery.data ?? null,
-    isLoading: parentQuery.isPending || studentQuery.isPending,
-    isError: parentQuery.isError || studentQuery.isError,
+    isLoading: studentQuery.isPending,
+    isError: studentQuery.isError,
     refetch: () => {
       void parentQuery.refetch();
       void studentQuery.refetch();

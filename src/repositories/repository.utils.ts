@@ -18,4 +18,4 @@ export const clone = <T>(value: T): T => structuredClone(value);
 export const resolveMock = <T>(payload: T): Promise<T> => simulateLatency(clone(payload));
 
 export const byNewest = <T>(items: T[], key: keyof T): T[] =>
-  [...items].sort((a, b) => String(b[key]).localeCompare(String(a[key])));
+  [...items].sort((a, b) => String(b[key] ?? "").localeCompare(String(a[key] ?? "")));

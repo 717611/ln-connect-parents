@@ -1,9 +1,12 @@
 import type { Classroom, Student } from "@/models";
-import { StudentRepository } from "@/repositories/StudentRepository";
+import {
+  StudentRepository,
+  type StudentLookupHints,
+} from "@/repositories/StudentRepository";
 
 export const studentService = {
-  getStudentByParent(parentId: string): Promise<Student> {
-    return StudentRepository.getStudentByParent(parentId);
+  getStudentByParent(parentId: string, hints?: StudentLookupHints): Promise<Student> {
+    return StudentRepository.getStudentByParent(parentId, hints);
   },
   getStudentById(studentId: string): Promise<Student> {
     return StudentRepository.getStudentById(studentId);
