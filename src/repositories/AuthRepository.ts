@@ -138,6 +138,10 @@ export const AuthRepository: IAuthRepository = {
 
       // Prefer the users document for metadata, fall back to the student document.
       const sourceDoc = userDoc ?? studentDoc;
+      if (!sourceDoc) {
+        throw new Error("No student found for this admission number.");
+      }
+
       const parentId =
         (typeof sourceDoc["parentId"] === "string" && sourceDoc["parentId"]) ||
         (typeof sourceDoc["studentId"] === "string" && sourceDoc["studentId"]) ||
