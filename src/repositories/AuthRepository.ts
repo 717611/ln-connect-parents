@@ -85,45 +85,71 @@ export const AuthRepository: IAuthRepository = {
     const admission = cleanUsername;
 
     try {
-      // 1. School Portal contract: users/username.
-      let docs = await listDocs("users", [where("username", "==", cleanUsername)]);
-      let fromUsers = docs.length > 0;
-      // 2. Fallback: students/admissionNo.
-      if (docs.length === 0) {
-        docs = await listDocs(COLLECTIONS.students, [where("admissionNo", "==", cleanUsername)]);
-      }
-      logLoginMatchCount(docs.length);
-      const userDoc = docs[0];
-      if (!userDoc) throw new Error("No student found for this admission number.");
+      // 1. Dual document fetching: users/username + students/admissionNo.
+      const [usersDocs, studentsDocs] = await Promise.all([
+        listDocs("users", [where("username", "==", cleanUsername)]),
+        listDocs(COLLECTIONS.students, [where("admissionNo", "==", cleanUsername)]),
+      ]);
+      logLoginMatchCount(usersDocs.length + studentsDocs.length);
 
-      const computedHash = await sha256Hex(cleanInput);
-      let valid = isPasswordValid(userDoc["password"], cleanInput, computedHash);
-
-      // Fallback: check the student record's password when users/ fails or lacks one.
-      if (!valid && fromUsers) {
-        const students = await listDocs(COLLECTIONS.students, [
-          where("admissionNo", "==", cleanUsername),
-        ]);
-        valid = students.some((s) => isPasswordValid(s["password"], cleanInput, computedHash));
+      if (usersDocs.length === 0 && studentsDocs.length === 0) {
+        throw new Error("No student found for this admission number.");
       }
+
+      const userDoc = usersDocs[0];
+      const studentDoc = studentsDocs[0];
+
+      // 2. Aggregate every candidate password from both documents.
+      const candidates = [
+        userDoc?.["password"],
+        userDoc?.["pass"],
+        studentDoc?.["password"],
+        studentDoc?.["pass"],
+      ]
+        .filter((p): p is string | number => Boolean(p))
+        .map((p) => String(p).trim());
+
+      // 3. Compute SHA-256 hash (lowercase hex) of the trimmed input.
+      const encoder = new TextEncoder();
+      const data = encoder.encode(cleanInput);
+      const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const computedHash = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("").toLowerCase();
+
+      // 4. Multi-field verification: plaintext, lowercase hash, uppercase hash.
+      const valid = candidates.some((candidate) => {
+        if (!candidate) return false;
+        return (
+          candidate === cleanInput ||
+          candidate.toLowerCase() === computedHash ||
+          candidate === computedHash.toUpperCase()
+        );
+      });
 
       if (!valid) {
+        // eslint-disable-next-line no-console
+        console.error("Auth Mismatch Debug:", {
+          cleanUsername,
+          candidates,
+          computedHash,
+        });
         throw new Error("Invalid password.");
       }
 
-
+      // Prefer the users document for metadata, fall back to the student document.
+      const sourceDoc = userDoc ?? studentDoc;
       const parentId =
-        (typeof userDoc["parentId"] === "string" && userDoc["parentId"]) ||
-        (typeof userDoc["studentId"] === "string" && userDoc["studentId"]) ||
-        userDoc.id;
+        (typeof sourceDoc["parentId"] === "string" && sourceDoc["parentId"]) ||
+        (typeof sourceDoc["studentId"] === "string" && sourceDoc["studentId"]) ||
+        sourceDoc.id;
       const displayName =
-        (typeof userDoc["fullName"] === "string" && userDoc["fullName"]) ||
-        (typeof userDoc["name"] === "string" && userDoc["name"]) ||
+        (typeof sourceDoc["fullName"] === "string" && sourceDoc["fullName"]) ||
+        (typeof sourceDoc["name"] === "string" && sourceDoc["name"]) ||
         "Parent";
 
       return {
         user: {
-          uid: userDoc.id,
+          uid: sourceDoc.id,
           parentId,
           role: "parent",
           admissionNumber: admission,
