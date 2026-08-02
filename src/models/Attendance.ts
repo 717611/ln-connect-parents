@@ -5,13 +5,7 @@ export type AttendanceStatus = "present" | "absent" | "late" | "holiday" | "unma
 export interface AttendanceDay {
   date: IsoDateTime;
   status: AttendanceStatus;
-}
-
-export interface SubjectAttendance {
-  subjectId: string;
-  subjectName: string;
-  presentCount: number;
-  totalCount: number;
+  remark?: string;
 }
 
 export interface AttendanceSummary {
@@ -23,8 +17,7 @@ export interface AttendanceSummary {
   workingDays: number;
   percentage: number | null;
   days: AttendanceDay[];
-  subjects: SubjectAttendance[];
-  /** The shared backend does not expose parent-facing attendance yet. */
+  /** False when the School Portal has not marked any attendance for the month. */
   isAvailable: boolean;
 }
 
