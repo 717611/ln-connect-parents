@@ -15,7 +15,14 @@ export interface Student {
   isActive: boolean;
 }
 
-export const formatClassSection = (student: Pick<Student, "className" | "section">): string =>
-  `Class ${(student.className || "").split("-")[0] || "—"}${
-    student.section ? `-${student.section}` : ""
-  }`;
+/** Strips any "Class " prefix the backend already stored, avoiding "Class Class 6-A". */
+export const cleanClassName = (className: string | null | undefined): string =>
+  (className || "").replace(/^\s*class\s+/i, "").trim();
+
+export const formatClassSection = (
+  student: Pick<Student, "className" | "section"> | null | undefined,
+): string => {
+  const base = cleanClassName(student?.className).split("-")[0]?.trim() || "—";
+  const section = (student?.section || "").trim();
+  return `Class ${base}${section && !base.includes(section) ? `-${section}` : ""}`;
+};
