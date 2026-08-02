@@ -181,14 +181,40 @@ export const mapComplaint = (raw: RawDoc): Complaint => ({
   messageCount: num(raw["messageCount"], 1),
 });
 
+const authorRole = (value: unknown): ComplaintMessage["authorRole"] => {
+  const raw = str(value).trim().toLowerCase();
+  if (raw === "school") return "school";
+  if (raw === "admin" || raw === "staff" || raw === "teacher") return "admin";
+  return "parent";
+};
+
 export const mapComplaintMessage = (complaintId: string) => (raw: RawDoc): ComplaintMessage => ({
   id: raw.id,
   complaintId,
-  authorRole: raw["authorRole"] === "school" ? "school" : "parent",
-  authorName: str(raw["authorName"], "School"),
-  body: str(raw["body"] ?? raw["message"]),
+  authorRole: authorRole(raw["authorRole"] ?? raw["sender"] ?? raw["role"]),
+  authorName: str(raw["authorName"] ?? raw["senderName"], "School"),
+  body: str(raw["body"] ?? raw["text"] ?? raw["message"]),
   sentAt: toIso(raw["sentAt"] ?? raw["createdAt"]),
 });
+
+/**
+ * School Portal parity: conversation messages live in a `messages` array field
+ * on the ticket document, shaped
+ * `{ id, sender, senderName, text, createdAt }`.
+ */
+export const mapTicketMessages = (complaintId: string, value: unknown): ComplaintMessage[] => {
+  if (!Array.isArray(value)) return [];
+  return value
+    .filter((entry): entry is Record<string, unknown> => Boolean(entry) && typeof entry === "object")
+    .map((entry, index) =>
+      mapComplaintMessage(complaintId)({
+        ...entry,
+        id: str(entry["id"], `${complaintId}-msg-${index}`),
+      }),
+    )
+    .sort((a, b) => a.sentAt.localeCompare(b.sentAt));
+};
+
 
 export const mapGalleryAlbum = (raw: RawDoc): GalleryAlbum => ({
   id: raw.id,
@@ -207,25 +233,43 @@ export const mapGalleryPhoto = (raw: RawDoc): GalleryPhoto => ({
   aspect: pick(raw["aspect"], ["portrait", "landscape", "square"] as const, "landscape"),
 });
 
+/** School Portal writes "P"/"Present"/"present"/"A" — normalise them all. */
+const attendanceStatus = (value: unknown): AttendanceStatus => {
+  const raw = str(value).trim().toLowerCase();
+  if (!raw) return "unmarked";
+  if (raw.startsWith("p")) return "present";
+  if (raw.startsWith("a") || raw === "ab") return "absent";
+  if (raw.startsWith("l") || raw.startsWith("t")) return "late";
+  if (raw.startsWith("h") || raw.startsWith("w")) return "holiday";
+  return pick<AttendanceStatus>(raw, ["present", "absent", "late", "holiday", "unmarked"], "unmarked");
+};
+
+export const mapAttendanceDay = (raw: RawDoc): AttendanceDay => {
+  const remark = str(raw["remark"] ?? raw["note"] ?? raw["reason"]).trim();
+  return {
+    date: toIso(raw["date"] ?? raw["attendanceDate"] ?? raw["createdAt"]),
+    status: attendanceStatus(raw["status"] ?? raw["attendanceStatus"] ?? raw["present"]),
+    ...(remark ? { remark } : {}),
+  };
+};
+
 export const mapAttendanceSummary = (
   studentId: string,
   month: string,
   docs: RawDoc[],
 ): AttendanceSummary => {
-  const days: AttendanceDay[] = docs.map((raw) => ({
-    date: toIso(raw["date"]),
-    status: pick<AttendanceStatus>(
-      raw["status"],
-      ["present", "absent", "late", "holiday", "unmarked"],
-      "unmarked",
-    ),
-  }));
+  const days: AttendanceDay[] = docs
+    .map(mapAttendanceDay)
+    .filter((day) => day.date.slice(0, 7) === month)
+    .sort((a, b) => a.date.localeCompare(b.date));
+
   const count = (status: AttendanceStatus) => days.filter((day) => day.status === status).length;
   const presentDays = count("present");
   const lateDays = count("late");
   const absentDays = count("absent");
-  const workingDays = days.filter((day) => day.status !== "holiday").length;
-  const subjects: SubjectAttendance[] = [];
+  const workingDays = days.filter(
+    (day) => day.status !== "holiday" && day.status !== "unmarked",
+  ).length;
 
   return {
     studentId,
@@ -236,7 +280,7 @@ export const mapAttendanceSummary = (
     workingDays,
     percentage: workingDays ? Math.round(((presentDays + lateDays) / workingDays) * 100) : null,
     days,
-    subjects,
     isAvailable: days.length > 0,
   };
+
 };
