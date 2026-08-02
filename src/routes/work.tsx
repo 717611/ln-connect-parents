@@ -42,9 +42,10 @@ function WorkRoute() {
   const navigate = Route.useNavigate();
   const { student, isLoading, isError, refetch } = useStudentProfile();
   const classroomId = student?.classroomId ?? null;
+  const className = student?.className ?? null;
 
-  const homeworkQuery = useHomework(classroomId);
-  const classworkQuery = useClasswork(classroomId);
+  const homeworkQuery = useHomework(classroomId, className);
+  const classworkQuery = useClasswork(classroomId, className);
 
   const homework = homeworkQuery.data ?? [];
   const classwork = classworkQuery.data ?? [];
