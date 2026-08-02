@@ -51,13 +51,15 @@ export const LABELS = {
   },
   attendance: {
     title: "Attendance",
-    comingSoonTitle: "Attendance is coming soon",
-    comingSoonBody:
-      "We are building a smarter attendance experience. Daily updates, monthly summaries and subject-wise insights will appear right here.",
-    monthlySummary: "Monthly Summary",
+    overall: "Overall",
+    workingDays: "Working Days",
+    daysPresent: "Present",
+    daysAbsent: "Absent",
     calendar: "Monthly Calendar",
-    subjectWise: "Subject-wise Attendance",
-    notifyMe: "Notify me when it is ready",
+    history: "Attendance History",
+    emptyTitle: "No attendance marked yet",
+    emptyBody: "Once the school marks daily attendance for this month it will appear here.",
+    allPresent: "No absences this month. Well done!",
   },
   gallery: {
     title: "Gallery",
