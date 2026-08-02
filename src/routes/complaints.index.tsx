@@ -14,6 +14,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { LABELS } from "@/constants/labels";
 import { useComplaints, useCreateComplaint } from "@/hooks/useComplaints";
 import { useStudentProfile } from "@/hooks/useStudentProfile";
+import { formatClassSection } from "@/models";
 
 export const Route = createFileRoute("/complaints/")({
   head: () => ({
