@@ -1,5 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -115,10 +116,10 @@ export function ComplaintForm({
 
       <Button
         type="submit"
-        disabled={isSubmitting}
+        disabled={isLocked}
         className="h-12 w-full rounded-2xl bg-primary text-sm font-semibold text-primary-foreground shadow-[var(--shadow-glow)] hover:bg-primary/90"
       >
-        {isSubmitting ? <Loader2 className="size-4 animate-spin" /> : null}
+        {isLocked ? <Loader2 className="size-4 animate-spin" /> : null}
         {LABELS.complaints.submit}
       </Button>
     </form>
