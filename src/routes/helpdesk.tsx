@@ -19,7 +19,7 @@ import { LABELS } from "@/constants/labels";
 import type { HelpDoc } from "@/constants/policies";
 import { useComplaints, useCreateComplaint } from "@/hooks/useComplaints";
 import { useStudentProfile } from "@/hooks/useStudentProfile";
-import type { ComplaintCategory } from "@/models";
+import { formatClassSection, type ComplaintCategory } from "@/models";
 
 export const Route = createFileRoute("/helpdesk")({
   head: () => ({
@@ -51,7 +51,11 @@ function HelpDeskRoute() {
   const studentId = student?.id ?? null;
 
   const complaintsQuery = useComplaints(studentId);
-  const createComplaint = useCreateComplaint(studentId);
+  const createComplaint = useCreateComplaint(studentId, {
+    studentName: student?.fullName || "Student",
+    admissionNumber: student?.admissionNumber || "",
+    className: formatClassSection(student),
+  });
   const requests = complaintsQuery.data ?? [];
   const activeCount = requests.filter(
     (item) => item.status === "open" || item.status === "in_progress",

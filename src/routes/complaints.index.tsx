@@ -40,7 +40,11 @@ function ComplaintsRoute() {
   const studentId = student?.id ?? null;
 
   const complaintsQuery = useComplaints(studentId);
-  const createComplaint = useCreateComplaint(studentId);
+  const createComplaint = useCreateComplaint(studentId, {
+    studentName: student?.fullName || "Student",
+    admissionNumber: student?.admissionNumber || "",
+    className: formatClassSection(student),
+  });
   const complaints = complaintsQuery.data ?? [];
 
   return (
