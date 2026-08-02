@@ -43,6 +43,8 @@ export const mockStudent: Student = {
   section: mockClassroom.section,
   rollNumber: "14",
   parentId: "par-1",
+  parentName: "Rajesh Kumar",
+  parentMobile: "+91 98350 12345",
   dateOfBirth: iso("2015-06-12"),
   bloodGroup: "B+",
   isActive: true,
@@ -433,6 +435,5 @@ export const mockAttendanceSummary: AttendanceSummary = {
   workingDays: 0,
   percentage: null,
   days: [],
-  subjects: [],
   isAvailable: false,
 };

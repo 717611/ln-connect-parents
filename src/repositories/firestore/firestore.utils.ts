@@ -7,11 +7,13 @@
  */
 import {
   addDoc,
+  arrayUnion,
   collection,
   doc,
   getDoc,
   getDocs,
   limit as fbLimit,
+  onSnapshot,
   orderBy,
   query,
   updateDoc,
@@ -23,8 +25,9 @@ import {
 import { getFirestoreDb, isFirebaseConfigured } from "@/config/firebase";
 import type { IsoDateTime } from "@/models";
 
-export { orderBy, where, fbLimit as limit };
+export { arrayUnion, orderBy, where, fbLimit as limit };
 export type { QueryConstraint };
+
 
 /** True when the shared Firebase backend should be used instead of mock data. */
 export const useFirebase = (): boolean => isFirebaseConfigured();
@@ -90,4 +93,24 @@ export const patchDoc = async (
   const segments = Array.isArray(path) ? path : [path];
   const [first, ...rest] = segments as [string, ...string[]];
   await updateDoc(doc(getFirestoreDb(), first, ...rest, id), payload);
+};
+
+/** Live document subscription. Returns the unsubscribe handle. */
+export const subscribeDoc = (
+  path: string | string[],
+  id: string,
+  onNext: (raw: RawDoc | null) => void,
+  onError?: (error: unknown) => void,
+): (() => void) => {
+  const segments = Array.isArray(path) ? path : [path];
+  const [first, ...rest] = segments as [string, ...string[]];
+  const ref = doc(getFirestoreDb(), first, ...rest, id);
+  return onSnapshot(
+    ref,
+    (snap) => onNext(snap.exists() ? { id: snap.id, ...snap.data() } : null),
+    (error) => {
+      console.error("[firestore] snapshot failed", error);
+      onError?.(error);
+    },
+  );
 };

@@ -10,7 +10,7 @@ export type ComplaintCategory =
   | "wellbeing"
   | "administration"
   | "other";
-export type ComplaintAuthorRole = "parent" | "school";
+export type ComplaintAuthorRole = "parent" | "school" | "admin";
 
 export interface ComplaintMessage {
   id: string;
@@ -20,6 +20,7 @@ export interface ComplaintMessage {
   body: string;
   sentAt: IsoDateTime;
 }
+
 
 export interface Complaint {
   id: string;

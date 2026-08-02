@@ -1,5 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -36,17 +37,27 @@ export function ComplaintForm({
   isSubmitting: boolean;
   defaultCategory?: ComplaintCategory | undefined;
 }) {
+  const [hasSubmitted, setHasSubmitted] = useState(false);
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: { subject: "", category: defaultCategory, description: "" },
   });
 
+  // Deduplication guard: the button locks on the first valid submit so a double
+  // tap can never create two helpdesk documents.
+  const isLocked = isSubmitting || hasSubmitted;
+
   return (
     <form
-      onSubmit={form.handleSubmit((values) => onSubmit(values))}
+      onSubmit={form.handleSubmit((values) => {
+        if (isLocked) return;
+        setHasSubmitted(true);
+        onSubmit(values);
+      })}
       className="space-y-4"
       noValidate
     >
+
       <div className="space-y-1.5">
         <Label htmlFor="subject" className="text-xs font-semibold text-muted-foreground">
           {LABELS.complaints.subject}
@@ -105,10 +116,10 @@ export function ComplaintForm({
 
       <Button
         type="submit"
-        disabled={isSubmitting}
+        disabled={isLocked}
         className="h-12 w-full rounded-2xl bg-primary text-sm font-semibold text-primary-foreground shadow-[var(--shadow-glow)] hover:bg-primary/90"
       >
-        {isSubmitting ? <Loader2 className="size-4 animate-spin" /> : null}
+        {isLocked ? <Loader2 className="size-4 animate-spin" /> : null}
         {LABELS.complaints.submit}
       </Button>
     </form>

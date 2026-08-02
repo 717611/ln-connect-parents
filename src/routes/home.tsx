@@ -76,14 +76,26 @@ function HomeRoute() {
           <ListSkeleton count={2} />
         </div>
       ) : (
-        <HomeContent classroomId={student.classroomId} studentId={student.id} />
+        <HomeContent
+          classroomId={student.classroomId}
+          className={student.className}
+          studentId={student.id}
+        />
       )}
     </AppShell>
   );
 }
 
-function HomeContent({ classroomId, studentId }: { classroomId: string; studentId: string }) {
-  const homeworkQuery = useHomework(classroomId);
+function HomeContent({
+  classroomId,
+  className,
+  studentId,
+}: {
+  classroomId: string;
+  className: string;
+  studentId: string;
+}) {
+  const homeworkQuery = useHomework(classroomId, className);
   const schoolNoticesQuery = useNotices("school", null);
   const complaintsQuery = useComplaints(studentId);
   const photosQuery = useLatestGalleryPhotos(4);

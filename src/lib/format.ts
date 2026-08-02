@@ -32,6 +32,57 @@ export const relativeTime = (iso: string): string => {
   return formatDate(iso);
 };
 
+/**
+ * Defensive date parser for values coming from Firestore, which may be a
+ * Timestamp, a `{ seconds }` object, an ISO string, epoch millis or garbage.
+ * Never throws and never silently reports "just now" for an unparseable value.
+ */
+export const parseFirestoreDate = (dateVal: unknown): Date => {
+  const valid = (date: Date): Date | null =>
+    Number.isNaN(date.getTime()) ? null : date;
+
+  if (dateVal instanceof Date) return valid(dateVal) ?? new Date();
+
+  const maybe = dateVal as { toDate?: () => Date; seconds?: number } | null | undefined;
+  if (maybe && typeof maybe.toDate === "function") {
+    const parsed = valid(maybe.toDate());
+    if (parsed) return parsed;
+  }
+  if (maybe && typeof maybe.seconds === "number") {
+    const parsed = valid(new Date(maybe.seconds * 1000));
+    if (parsed) return parsed;
+  }
+  if (typeof dateVal === "string" || typeof dateVal === "number") {
+    const parsed = valid(new Date(dateVal));
+    if (parsed) return parsed;
+  }
+  return new Date();
+};
+
+const longDateFormatter = new Intl.DateTimeFormat("en-US", {
+  month: "short",
+  day: "2-digit",
+  year: "numeric",
+});
+
+/**
+ * "3 hr ago" for anything posted in the last 24 hours, otherwise the exact
+ * "MMM dd, yyyy • hh:mm a" stamp so older notices never read as "just now".
+ */
+export const formatFirestoreDateTime = (dateVal: unknown): string => {
+  const date = parseFirestoreDate(dateVal);
+  const diffMs = Date.now() - date.getTime();
+  if (diffMs >= 0 && diffMs < 86_400_000) {
+    const minutes = Math.round(diffMs / 60_000);
+    if (minutes < 1) return "just now";
+    if (minutes < 60) return `${minutes} min ago`;
+    const hours = Math.round(minutes / 60);
+    return `${hours} hr ago`;
+  }
+  return `${longDateFormatter.format(date)} • ${timeFormatter.format(date)}`;
+};
+
+
 export const greeting = (date: Date = new Date()): string => {
   const hour = date.getHours();
   if (hour < 12) return "Good Morning";

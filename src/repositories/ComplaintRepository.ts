@@ -8,21 +8,29 @@ import type {
 } from "@/models";
 
 import {
+  arrayUnion,
   createDoc,
   getDocById,
   listDocs,
-  orderBy,
   patchDoc,
+  subscribeDoc,
   useFirebase,
   where,
 } from "./firestore/firestore.utils";
-import { mapComplaint, mapComplaintMessage } from "./firestore/mappers";
+import { mapComplaint, mapComplaintMessage, mapTicketMessages } from "./firestore/mappers";
 import { byNewest, clone, resolveMock } from "./repository.utils";
+
+/** A ticket plus its conversation, as rendered by the thread screen. */
+export interface ComplaintThread {
+  complaint: Complaint | null;
+  messages: ComplaintMessage[];
+}
 
 export interface IComplaintRepository {
   listByStudent(studentId: string): Promise<Complaint[]>;
   getById(complaintId: string): Promise<Complaint | null>;
   listMessages(complaintId: string): Promise<ComplaintMessage[]>;
+  subscribeThread(complaintId: string, onChange: (thread: ComplaintThread) => void): () => void;
   create(
     studentId: string,
     input: NewComplaintInput,
@@ -60,9 +68,25 @@ const resolveCollection = async (complaintId: string): Promise<string | null> =>
   return null;
 };
 
+/** School Portal message shape stored inside the ticket's `messages` array. */
+const ticketMessage = (sender: "parent" | "school", senderName: string, text: string) => ({
+  id: `msg_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+  sender,
+  senderName,
+  text,
+  createdAt: new Date().toISOString(),
+});
+
 /** In-memory session store so the UI behaves realistically before Firestore. */
 const localComplaints: Complaint[] = clone(mockComplaints);
 const localMessages: ComplaintMessage[] = clone(mockComplaintMessages);
+
+const localThread = (complaintId: string): ComplaintThread => ({
+  complaint: localComplaints.find((item) => item.id === complaintId) ?? null,
+  messages: localMessages
+    .filter((message) => message.complaintId === complaintId)
+    .sort((a, b) => a.sentAt.localeCompare(b.sentAt)),
+});
 
 export const ComplaintRepository: IComplaintRepository = {
   async listByStudent(studentId) {
@@ -99,21 +123,47 @@ export const ComplaintRepository: IComplaintRepository = {
   async listMessages(complaintId) {
     if (useFirebase()) {
       const name = (await resolveCollection(complaintId)) ?? COLLECTIONS.helpdesk;
+      const raw = await getDocById(name, complaintId);
+      const fromArray = mapTicketMessages(complaintId, raw?.["messages"]);
+      if (fromArray.length > 0) return fromArray;
       try {
-        const docs = await listDocs(messagesPath(name, complaintId), [orderBy("sentAt", "asc")]);
-        return docs.map(mapComplaintMessage(complaintId));
-      } catch (error) {
-        console.error("[helpdesk] failed reading messages", error);
+        // Legacy tickets kept replies in a subcollection.
         const docs = await listDocs(messagesPath(name, complaintId));
         return docs
           .map(mapComplaintMessage(complaintId))
           .sort((a, b) => a.sentAt.localeCompare(b.sentAt));
+      } catch (error) {
+        console.error("[helpdesk] failed reading messages", error);
+        return [];
       }
     }
-    const messages = localMessages
-      .filter((message) => message.complaintId === complaintId)
-      .sort((a, b) => a.sentAt.localeCompare(b.sentAt));
-    return resolveMock(messages);
+    return resolveMock(localThread(complaintId).messages);
+  },
+
+  subscribeThread(complaintId, onChange) {
+    if (!useFirebase()) {
+      onChange(localThread(complaintId));
+      return () => undefined;
+    }
+
+    let unsubscribe: (() => void) | null = null;
+    let cancelled = false;
+
+    void (async () => {
+      const name = (await resolveCollection(complaintId)) ?? COLLECTIONS.helpdesk;
+      if (cancelled) return;
+      unsubscribe = subscribeDoc(name, complaintId, (raw) => {
+        onChange({
+          complaint: raw ? mapComplaint(raw) : null,
+          messages: raw ? mapTicketMessages(complaintId, raw["messages"]) : [],
+        });
+      });
+    })();
+
+    return () => {
+      cancelled = true;
+      unsubscribe?.();
+    };
   },
 
   async create(studentId, input, context) {
@@ -121,6 +171,11 @@ export const ComplaintRepository: IComplaintRepository = {
 
     if (useFirebase()) {
       const ticketNumber = `CMP-${Date.now().toString().slice(-6)}`;
+      const firstMessage = ticketMessage(
+        "parent",
+        context?.studentName ? `Parent of ${context.studentName}` : "Parent",
+        input.description,
+      );
       const payload = sanitize({
         ticketNumber,
         subject: input.subject,
@@ -135,21 +190,13 @@ export const ComplaintRepository: IComplaintRepository = {
         createdAt: now,
         updatedAt: now,
         messageCount: 1,
+        messages: [firstMessage],
         source: "parent-portal",
       });
 
       try {
         const id = await createDoc(COLLECTIONS.helpdesk, payload);
         ticketCollection.set(id, COLLECTIONS.helpdesk);
-        await createDoc(
-          messagesPath(COLLECTIONS.helpdesk, id),
-          sanitize({
-            authorRole: "parent",
-            authorName: context?.studentName ? `Parent of ${context.studentName}` : "Parent",
-            body: input.description,
-            sentAt: now,
-          }),
-        );
         return {
           id,
           ticketNumber,
@@ -198,17 +245,22 @@ export const ComplaintRepository: IComplaintRepository = {
 
     if (useFirebase()) {
       const name = (await resolveCollection(complaintId)) ?? COLLECTIONS.helpdesk;
+      const entry = ticketMessage("parent", authorName, body);
       try {
-        const id = await createDoc(
-          messagesPath(name, complaintId),
-          sanitize({ authorRole: "parent", authorName, body, sentAt: now }),
-        );
         const existing = await getDocById(name, complaintId);
         await patchDoc(name, complaintId, {
+          messages: arrayUnion(entry),
           updatedAt: now,
           messageCount: (existing ? mapComplaint(existing).messageCount : 0) + 1,
         });
-        return { id, complaintId, authorRole: "parent", authorName, body, sentAt: now };
+        return {
+          id: entry.id,
+          complaintId,
+          authorRole: "parent",
+          authorName,
+          body,
+          sentAt: entry.createdAt,
+        };
       } catch (error) {
         console.error("[helpdesk] failed to send message", error);
         throw error instanceof Error ? error : new Error("Failed to send message.");

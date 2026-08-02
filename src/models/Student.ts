@@ -10,6 +10,10 @@ export interface Student {
   section: string;
   rollNumber: string;
   parentId: string;
+  /** Resolved from parentName / fatherName / guardianName / motherName. */
+  parentName: string;
+  /** Resolved from parentMobile / parentPhone / phone / mobile / contactNumber. */
+  parentMobile: string;
   dateOfBirth: IsoDateTime | null;
   bloodGroup: string | null;
   isActive: boolean;
@@ -26,3 +30,11 @@ export const formatClassSection = (
   const section = (student?.section || "").trim();
   return `Class ${base}${section && !base.includes(section) ? `-${section}` : ""}`;
 };
+
+/**
+ * Comparable class key: "Class 6 - A", "class6a" and "6-A" all become "6a", so
+ * casing and separator differences between portals never hide work items.
+ */
+export const normalizeClass = (cls: string | null | undefined): string =>
+  cls ? cls.toLowerCase().replace(/^class\s+/i, "").replace(/[-\s_]/g, "") : "";
+

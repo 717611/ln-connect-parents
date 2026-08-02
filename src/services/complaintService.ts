@@ -1,5 +1,10 @@
 import type { Complaint, ComplaintMessage, ComplaintStudentContext, NewComplaintInput } from "@/models";
-import { ComplaintRepository } from "@/repositories/ComplaintRepository";
+import {
+  ComplaintRepository,
+  type ComplaintThread,
+} from "@/repositories/ComplaintRepository";
+
+export type { ComplaintThread };
 
 export const complaintService = {
   listByStudent(studentId: string): Promise<Complaint[]> {
@@ -15,6 +20,10 @@ export const complaintService = {
   listMessages(complaintId: string): Promise<ComplaintMessage[]> {
     return ComplaintRepository.listMessages(complaintId);
   },
+  subscribeThread(complaintId: string, onChange: (thread: ComplaintThread) => void): () => void {
+    return ComplaintRepository.subscribeThread(complaintId, onChange);
+  },
+
   create(
     studentId: string,
     input: NewComplaintInput,

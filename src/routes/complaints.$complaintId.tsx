@@ -13,11 +13,8 @@ import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { LABELS } from "@/constants/labels";
-import {
-  useComplaint,
-  useComplaintMessages,
-  useSendComplaintMessage,
-} from "@/hooks/useComplaints";
+import { useComplaintThread, useSendComplaintMessage } from "@/hooks/useComplaints";
+
 import { useStudentProfile } from "@/hooks/useStudentProfile";
 import { formatDate } from "@/lib/format";
 import { COMPLAINT_CATEGORY_LABEL } from "@/models";
@@ -46,16 +43,13 @@ function ComplaintDetailRoute() {
   const { parent, student } = useStudentProfile();
   const [draft, setDraft] = useState("");
 
-  const complaintQuery = useComplaint(complaintId);
-  const messagesQuery = useComplaintMessages(complaintId);
+  const { complaint, messages, isPending } = useComplaintThread(complaintId);
   const sendMessage = useSendComplaintMessage(
     complaintId,
     student?.id ?? null,
-    parent?.fullName ?? "Parent",
+    parent?.fullName ?? student?.parentName ?? "Parent",
   );
 
-  const complaint = complaintQuery.data ?? null;
-  const messages = messagesQuery.data ?? [];
 
   const onSend = () => {
     const body = draft.trim();
@@ -68,7 +62,7 @@ function ComplaintDetailRoute() {
 
   return (
     <AppShell title={LABELS.helpDesk.threadTitle} showBack>
-      {complaintQuery.isPending ? (
+      {isPending ? (
         <ComplaintThreadSkeleton />
       ) : !complaint ? (
         <div className="surface-card">
@@ -103,8 +97,10 @@ function ComplaintDetailRoute() {
           </SectionCard>
 
           <div className="space-y-3">
-            {messagesQuery.isPending ? (
-              <ComplaintThreadSkeleton count={3} />
+            {messages.length === 0 ? (
+              <p className="py-4 text-center text-xs text-muted-foreground">
+                No replies yet. The school will respond in this thread.
+              </p>
             ) : (
               messages.map((message) => (
                 <ComplaintMessageBubble key={message.id} message={message} />
