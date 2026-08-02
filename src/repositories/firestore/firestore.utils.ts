@@ -7,11 +7,13 @@
  */
 import {
   addDoc,
+  arrayUnion,
   collection,
   doc,
   getDoc,
   getDocs,
   limit as fbLimit,
+  onSnapshot,
   orderBy,
   query,
   updateDoc,
@@ -23,8 +25,9 @@ import {
 import { getFirestoreDb, isFirebaseConfigured } from "@/config/firebase";
 import type { IsoDateTime } from "@/models";
 
-export { orderBy, where, fbLimit as limit };
+export { arrayUnion, orderBy, where, fbLimit as limit };
 export type { QueryConstraint };
+
 
 /** True when the shared Firebase backend should be used instead of mock data. */
 export const useFirebase = (): boolean => isFirebaseConfigured();
