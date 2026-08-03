@@ -171,14 +171,13 @@ export const mapComplaint = (raw: RawDoc): Complaint => ({
     ],
     "other",
   ),
-  status: pick<ComplaintStatus>(
-    raw["status"],
-    ["open", "in_progress", "resolved", "closed"],
-    "open",
-  ),
+  status: complaintStatus(raw["status"] ?? raw["statusLabel"]),
   createdAt: toIso(raw["createdAt"]),
   updatedAt: toIso(raw["updatedAt"] ?? raw["createdAt"]),
-  messageCount: num(raw["messageCount"], 1),
+  messageCount: num(
+    raw["messageCount"],
+    Array.isArray(raw["messages"]) ? (raw["messages"] as unknown[]).length : 1,
+  ),
 });
 
 const authorRole = (value: unknown): ComplaintMessage["authorRole"] => {
