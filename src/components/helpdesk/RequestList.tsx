@@ -42,7 +42,8 @@ function RequestCard({ request }: { request: Complaint }) {
             {request.description}
           </p>
           <p className="mt-3 text-[11px] text-muted-foreground">
-            Created {formatDate(request.createdAt)} · Latest activity{" "}
+            Created {formatDate(request.createdAt)} · {request.messageCount}{" "}
+            {request.messageCount === 1 ? "message" : "messages"} · Latest activity{" "}
             {relativeTime(request.updatedAt)}
           </p>
         </div>

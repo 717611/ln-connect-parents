@@ -3,7 +3,7 @@ import { Megaphone } from "lucide-react";
 import { PriorityBadge } from "@/components/common/DomainBadges";
 import { IconTile } from "@/components/common/IconTile";
 import { StatusBadge } from "@/components/common/StatusBadge";
-import { formatFirestoreDateTime } from "@/lib/format";
+import { parseNoticeDate } from "@/lib/format";
 import { NOTICE_CATEGORY_LABEL, type Notice } from "@/models";
 import { cn } from "@/lib/utils";
 
@@ -30,7 +30,7 @@ export function NoticeCard({ notice, compact = false }: { notice: Notice; compac
           </p>
           <div className="mt-3 flex items-center gap-2 text-[11px] text-muted-foreground">
             <StatusBadge label={NOTICE_CATEGORY_LABEL[notice.category]} tone="neutral" />
-            <span>{formatFirestoreDateTime(notice.publishedAt)}</span>
+            <span>{parseNoticeDate(notice)}</span>
           </div>
         </div>
       </div>
