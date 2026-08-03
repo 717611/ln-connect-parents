@@ -102,7 +102,7 @@ function ComplaintDetailRoute() {
             </div>
           </SectionCard>
 
-          <div className="space-y-3">
+          <div className="space-y-1">
             {messages.length === 0 ? (
               <p className="py-4 text-center text-xs text-muted-foreground">
                 No replies yet. The school will respond in this thread.
@@ -112,9 +112,11 @@ function ComplaintDetailRoute() {
                 <ComplaintMessageBubble key={message.id} message={message} />
               ))
             )}
+            <div ref={bottomRef} />
           </div>
 
-          <div className="sticky bottom-24 flex items-center gap-2 rounded-3xl bg-card p-2 shadow-[var(--shadow-raised)]">
+          <div className="sticky bottom-24 flex items-center gap-2 rounded-3xl border border-border/60 bg-card/80 p-2 shadow-[var(--shadow-raised)] backdrop-blur-md">
+
             <Input
               value={draft}
               onChange={(event) => setDraft(event.target.value)}
