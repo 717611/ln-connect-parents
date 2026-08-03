@@ -50,6 +50,12 @@ function ComplaintDetailRoute() {
     parent?.fullName ?? student?.parentName ?? "Parent",
   );
 
+  const bottomRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [messages.length]);
+
+
 
   const onSend = () => {
     const body = draft.trim();
