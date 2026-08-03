@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 
+import { DemoDataBanner } from "@/components/feedback/DemoDataBanner";
 import { ErrorBoundary } from "@/components/feedback/ErrorBoundary";
 import { OfflineState } from "@/components/feedback/OfflineState";
 import { ProtectedRoute } from "@/components/guards/ProtectedRoute";
@@ -37,6 +38,7 @@ export function AppShell({
   return (
     <ProtectedRoute>
       <div className="min-h-screen bg-background">
+        <DemoDataBanner />
         <AppHeader title={title} showBack={showBack} showNotifications={showNotifications}>
           {header}
         </AppHeader>
