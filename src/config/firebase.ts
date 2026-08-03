@@ -26,9 +26,35 @@ export interface FirebaseConfig {
 }
 
 const env = import.meta.env as Record<string, string | undefined>;
-/** Reads VITE_* first, then falls back to the NEXT_PUBLIC_* name (School Portal parity). */
+
+/**
+ * Optional runtime config injected by `public/firebase-config.js`. It exists so
+ * a host that was deployed without the VITE_FIREBASE_* build-time env vars
+ * (e.g. Vercel) can still reach the shared School Portal backend.
+ */
+type RuntimeFirebaseConfig = Partial<Record<keyof FirebaseConfig | "databaseId", string>>;
+
+const runtime = (): RuntimeFirebaseConfig =>
+  (typeof globalThis !== "undefined"
+    ? ((globalThis as { __LN_FIREBASE__?: RuntimeFirebaseConfig }).__LN_FIREBASE__ ?? {})
+    : {});
+
+/** Maps VITE_FIREBASE_API_KEY -> apiKey, VITE_FIRESTORE_DATABASE_ID -> databaseId. */
+const runtimeKey = (key: string): keyof RuntimeFirebaseConfig => {
+  if (key === "VITE_FIRESTORE_DATABASE_ID") return "databaseId";
+  const camel = key
+    .replace(/^VITE_FIREBASE_/, "")
+    .toLowerCase()
+    .replace(/_([a-z])/g, (_, char: string) => char.toUpperCase());
+  return camel as keyof RuntimeFirebaseConfig;
+};
+
+/** VITE_* first, then NEXT_PUBLIC_* (School Portal parity), then runtime config. */
 const read = (key: string): string =>
-  env[key]?.trim() || env[key.replace(/^VITE_/, "NEXT_PUBLIC_")]?.trim() || "";
+  env[key]?.trim() ||
+  env[key.replace(/^VITE_/, "NEXT_PUBLIC_")]?.trim() ||
+  runtime()[runtimeKey(key)]?.trim() ||
+  "";
 
 /**
  * Custom Firestore database ID shared with the School Portal. It can be
@@ -40,6 +66,7 @@ export const DEFAULT_FIRESTORE_DATABASE_ID =
 
 export const firestoreDatabaseId =
   read("VITE_FIRESTORE_DATABASE_ID") || DEFAULT_FIRESTORE_DATABASE_ID;
+
 
 export const firebaseConfig: FirebaseConfig = {
   apiKey: read("VITE_FIREBASE_API_KEY"),
