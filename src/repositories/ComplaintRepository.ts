@@ -250,6 +250,7 @@ export const ComplaintRepository: IComplaintRepository = {
         const existing = await getDocById(name, complaintId);
         await patchDoc(name, complaintId, {
           messages: arrayUnion(entry),
+          status: "In Progress",
           updatedAt: now,
           messageCount: (existing ? mapComplaint(existing).messageCount : 0) + 1,
         });
