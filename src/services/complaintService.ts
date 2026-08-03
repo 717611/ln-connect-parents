@@ -24,6 +24,10 @@ export const complaintService = {
     return ComplaintRepository.subscribeThread(complaintId, onChange);
   },
 
+  subscribeByStudent(studentId: string, onChange: (complaints: Complaint[]) => void): () => void {
+    return ComplaintRepository.subscribeByStudent(studentId, onChange);
+  },
+
   create(
     studentId: string,
     input: NewComplaintInput,

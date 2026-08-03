@@ -13,6 +13,7 @@ import {
   getDocById,
   listDocs,
   patchDoc,
+  subscribeCollection,
   subscribeDoc,
   useFirebase,
   where,
@@ -31,6 +32,7 @@ export interface IComplaintRepository {
   getById(complaintId: string): Promise<Complaint | null>;
   listMessages(complaintId: string): Promise<ComplaintMessage[]>;
   subscribeThread(complaintId: string, onChange: (thread: ComplaintThread) => void): () => void;
+  subscribeByStudent(studentId: string, onChange: (complaints: Complaint[]) => void): () => void;
   create(
     studentId: string,
     input: NewComplaintInput,
@@ -164,6 +166,33 @@ export const ComplaintRepository: IComplaintRepository = {
       cancelled = true;
       unsubscribe?.();
     };
+  },
+
+  subscribeByStudent(studentId, onChange) {
+    if (!useFirebase()) {
+      onChange(byNewest(localComplaints, "updatedAt"));
+      return () => undefined;
+    }
+
+    const byId = new Map<string, Complaint>();
+    const emit = () => onChange(byNewest([...byId.values()], "updatedAt"));
+    const unsubscribers: Array<() => void> = [];
+
+    for (const name of TICKET_COLLECTIONS) {
+      for (const field of ["studentId", "admissionNo"]) {
+        unsubscribers.push(
+          subscribeCollection(name, [where(field, "==", studentId)], (docs) => {
+            docs.forEach((raw) => {
+              ticketCollection.set(raw.id, name);
+              byId.set(raw.id, mapComplaint(raw));
+            });
+            emit();
+          }),
+        );
+      }
+    }
+
+    return () => unsubscribers.forEach((stop) => stop());
   },
 
   async create(studentId, input, context) {
