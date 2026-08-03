@@ -13,6 +13,9 @@ export interface Notice {
   category: NoticeCategory;
   priority: NoticePriority;
   publishedAt: IsoDateTime;
+  /** Pre-formatted stamps written by the School Portal, when present. */
+  displayDate?: string | null;
+  displayTime?: string | null;
   publishedBy: string;
   attachmentUrls: string[];
 }
