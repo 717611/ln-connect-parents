@@ -78,7 +78,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "icon", type: "image/png", href: "/favicon.png" },
       { rel: "apple-touch-icon", href: "/favicon.png" },
     ],
+    // Runtime Firebase config (public/firebase-config.js). Must run before the
+    // app bundle so hosts without build-time VITE_* env vars still connect.
+    scripts: [{ src: "/firebase-config.js" }],
   }),
+
   shellComponent: RootShell,
   component: RootComponent,
   notFoundComponent: NotFoundComponent,
