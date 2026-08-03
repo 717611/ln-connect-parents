@@ -97,3 +97,18 @@ export const initials = (name: string | null | undefined): string =>
     .slice(0, 2)
     .map((part) => part[0]?.toUpperCase() ?? "")
     .join("");
+
+/**
+ * Notice timing: pre-formatted School Portal stamps win, otherwise parse
+ * whichever timestamp field exists and render relative time only within 24h.
+ */
+export const parseNoticeDate = (notice: {
+  displayDate?: string | null;
+  displayTime?: string | null;
+  publishedAt?: unknown;
+}): string => {
+  if (notice.displayDate) {
+    return notice.displayTime ? `${notice.displayDate} • ${notice.displayTime}` : notice.displayDate;
+  }
+  return formatFirestoreDateTime(notice.publishedAt);
+};

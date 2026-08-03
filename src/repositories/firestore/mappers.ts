@@ -146,10 +146,24 @@ export const mapNotice = (raw: RawDoc): Notice => ({
     "general",
   ),
   priority: pick<NoticePriority>(raw["priority"], ["high", "medium", "low"], "medium"),
-  publishedAt: toIso(raw["publishedAt"] ?? raw["createdAt"]),
+  publishedAt: toIso(
+    raw["publishedAt"] ?? raw["createdAt"] ?? raw["date"] ?? raw["updatedAt"],
+  ),
+  displayDate: str(raw["displayDate"]) || null,
+  displayTime: str(raw["displayTime"]) || null,
   publishedBy: str(raw["publishedBy"] ?? raw["author"], "School Office"),
   attachmentUrls: strList(raw["attachmentUrls"] ?? raw["attachments"]),
 });
+
+/** School Portal writes "Pending" / "In Progress" / "Resolved" labels. */
+const complaintStatus = (value: unknown): ComplaintStatus => {
+  const raw = str(value).trim().toLowerCase().replace(/[\s-]+/g, "_");
+  if (raw === "pending" || raw === "new" || raw === "open") return "open";
+  if (raw === "in_progress" || raw === "active" || raw === "ongoing") return "in_progress";
+  if (raw === "resolved") return "resolved";
+  if (raw === "closed") return "closed";
+  return pick<ComplaintStatus>(raw, ["open", "in_progress", "resolved", "closed"], "open");
+};
 
 export const mapComplaint = (raw: RawDoc): Complaint => ({
   id: raw.id,
@@ -171,14 +185,13 @@ export const mapComplaint = (raw: RawDoc): Complaint => ({
     ],
     "other",
   ),
-  status: pick<ComplaintStatus>(
-    raw["status"],
-    ["open", "in_progress", "resolved", "closed"],
-    "open",
-  ),
+  status: complaintStatus(raw["status"] ?? raw["statusLabel"]),
   createdAt: toIso(raw["createdAt"]),
   updatedAt: toIso(raw["updatedAt"] ?? raw["createdAt"]),
-  messageCount: num(raw["messageCount"], 1),
+  messageCount: num(
+    raw["messageCount"],
+    Array.isArray(raw["messages"]) ? (raw["messages"] as unknown[]).length : 1,
+  ),
 });
 
 const authorRole = (value: unknown): ComplaintMessage["authorRole"] => {

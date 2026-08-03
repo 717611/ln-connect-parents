@@ -114,3 +114,23 @@ export const subscribeDoc = (
     },
   );
 };
+
+/** Live collection subscription. Returns the unsubscribe handle. */
+export const subscribeCollection = (
+  path: string | string[],
+  constraints: QueryConstraint[],
+  onNext: (docs: RawDoc[]) => void,
+  onError?: (error: unknown) => void,
+): (() => void) => {
+  const segments = Array.isArray(path) ? path : [path];
+  const [first, ...rest] = segments as [string, ...string[]];
+  const ref = collection(getFirestoreDb(), first, ...rest);
+  return onSnapshot(
+    constraints.length ? query(ref, ...constraints) : ref,
+    (snap) => onNext(snap.docs.map((entry) => ({ id: entry.id, ...entry.data() }))),
+    (error) => {
+      console.error("[firestore] collection snapshot failed", error);
+      onError?.(error);
+    },
+  );
+};

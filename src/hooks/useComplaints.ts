@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 
 import { APP_CONFIG } from "@/constants/config";
-import type { ComplaintStudentContext, NewComplaintInput } from "@/models";
+import type { Complaint, ComplaintStudentContext, NewComplaintInput } from "@/models";
 import { complaintService, type ComplaintThread } from "@/services/complaintService";
 
 import { queryKeys } from "./queryKeys";
@@ -45,6 +45,38 @@ export function useComplaintThread(complaintId: string) {
   };
 }
 
+
+/** Live ticket list: reflects School Portal replies and status flips instantly. */
+export function useComplaintsLive(studentId: string | null) {
+  const [complaints, setComplaints] = useState<Complaint[] | null>(null);
+
+  useEffect(() => {
+    if (!studentId) {
+      setComplaints([]);
+      return;
+    }
+    let active = true;
+    setComplaints(null);
+
+    const unsubscribe = complaintService.subscribeByStudent(studentId, (next) => {
+      if (active) setComplaints(next);
+    });
+
+    void complaintService
+      .listByStudent(studentId)
+      .then((list) => {
+        if (active) setComplaints((prev) => prev ?? list);
+      })
+      .catch((error) => console.error("[helpdesk] failed loading tickets", error));
+
+    return () => {
+      active = false;
+      unsubscribe();
+    };
+  }, [studentId]);
+
+  return { isPending: complaints === null, complaints: complaints ?? [] };
+}
 
 export function useComplaints(studentId: string | null) {
   return useQuery({
