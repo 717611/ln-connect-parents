@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { SendHorizontal } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { ComplaintStatusBadge } from "@/components/common/DomainBadges";
