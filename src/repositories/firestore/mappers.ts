@@ -194,20 +194,52 @@ export const mapComplaint = (raw: RawDoc): Complaint => ({
   ),
 });
 
-const authorRole = (value: unknown): ComplaintMessage["authorRole"] => {
-  const raw = str(value).trim().toLowerCase();
-  if (raw === "school") return "school";
-  if (raw === "admin" || raw === "staff" || raw === "teacher") return "admin";
+/**
+ * Defensive sender classification. The School Portal writes the author under
+ * several different keys (`sender`, `senderRole`, `senderType`, `authorRole`,
+ * `role`, `from`), so inspect them all and only treat a message as a parent
+ * message when it explicitly says so.
+ */
+const SCHOOL_ROLE_RE = /school|admin|teacher|office|staff|principal/i;
+const PARENT_ROLE_RE = /parent|guardian|father|mother|student/i;
+
+const authorRole = (raw: RawDoc): ComplaintMessage["authorRole"] => {
+  const candidates = [
+    raw["senderRole"],
+    raw["senderType"],
+    raw["authorRole"],
+    raw["role"],
+    raw["sender"],
+    raw["from"],
+    raw["authorType"],
+  ]
+    .map((value) => str(value).trim().toLowerCase())
+    .filter(Boolean);
+
+  for (const value of candidates) {
+    if (value === "school") return "school";
+    if (value === "admin" || value === "staff" || value === "teacher" || value === "office") {
+      return "admin";
+    }
+    if (PARENT_ROLE_RE.test(value)) return "parent";
+    if (SCHOOL_ROLE_RE.test(value)) return "admin";
+  }
+
+  const name = str(raw["senderName"] ?? raw["authorName"] ?? raw["name"]).trim();
+  if (name && SCHOOL_ROLE_RE.test(name) && !PARENT_ROLE_RE.test(name)) return "admin";
+
   return "parent";
 };
 
 export const mapComplaintMessage = (complaintId: string) => (raw: RawDoc): ComplaintMessage => ({
   id: raw.id,
+  authorRole: authorRole(raw),
   complaintId,
-  authorRole: authorRole(raw["authorRole"] ?? raw["sender"] ?? raw["role"]),
-  authorName: str(raw["authorName"] ?? raw["senderName"], "School"),
-  body: str(raw["body"] ?? raw["text"] ?? raw["message"]),
-  sentAt: toIso(raw["sentAt"] ?? raw["createdAt"]),
+  authorName: str(raw["senderName"] ?? raw["authorName"] ?? raw["name"], "School"),
+  body: str(raw["text"] ?? raw["body"] ?? raw["content"] ?? raw["message"]),
+  sentAt: toIso(
+    raw["createdAt"] ?? raw["sentAt"] ?? raw["timestamp"] ?? raw["date"] ?? raw["updatedAt"],
+  ),
 });
 
 /**
@@ -227,6 +259,7 @@ export const mapTicketMessages = (complaintId: string, value: unknown): Complain
     )
     .sort((a, b) => a.sentAt.localeCompare(b.sentAt));
 };
+
 
 
 export const mapGalleryAlbum = (raw: RawDoc): GalleryAlbum => ({
