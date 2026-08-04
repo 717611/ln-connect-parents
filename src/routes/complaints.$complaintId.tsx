@@ -114,8 +114,13 @@ function ComplaintDetailRoute() {
               </p>
             ) : (
               messages.map((message) => (
-                <ComplaintMessageBubble key={message.id} message={message} />
+                <ComplaintMessageBubble
+                  key={message.id}
+                  message={message}
+                  parentName={parentDisplayName}
+                />
               ))
+
             )}
             <div ref={bottomRef} />
           </div>
