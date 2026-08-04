@@ -50,10 +50,15 @@ function ComplaintDetailRoute() {
     parent?.fullName ?? student?.parentName ?? "Parent",
   );
 
+  const parentDisplayName = parent?.fullName ?? student?.parentName ?? "Parent";
   const bottomRef = useRef<HTMLDivElement | null>(null);
+  const lastMessageKey = messages.length
+    ? `${messages.length}:${messages[messages.length - 1]?.id ?? ""}:${messages[messages.length - 1]?.sentAt ?? ""}`
+    : "";
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-  }, [messages.length]);
+  }, [lastMessageKey]);
+
 
 
 
