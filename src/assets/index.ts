@@ -4,13 +4,12 @@
  */
 import attendancePlaceholder from "./attendance-placeholder.png";
 import galleryPlaceholder from "./gallery-placeholder.jpg";
-import loginSchoolAsset from "./login-school.jpg.asset.json";
-import lnLogoAsset from "./ln-logo.png.asset.json";
 import studentPlaceholder from "./student-placeholder.jpg";
 
+/** Branding images are served from /public so any host (Vercel included) can load them. */
 export const ASSETS = {
-  loginSchool: loginSchoolAsset.url,
-  lnLogo: lnLogoAsset.url,
+  loginSchool: "/login-school.jpg",
+  lnLogo: "/ln-logo.png",
   studentPlaceholder,
   galleryPlaceholder,
   attendancePlaceholder,
