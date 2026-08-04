@@ -113,13 +113,18 @@ function LoginScreen() {
           transition={{ duration: MOTION.slow, ease: MOTION.ease }}
           className="text-center"
         >
-          <img
-            src={ASSETS.lnLogo}
-            alt="LN International School crest"
-            width={96}
-            height={96}
-            className="mx-auto size-20 object-contain drop-shadow-lg"
-          />
+          {logoFailed ? (
+            <ShieldCheck className="mx-auto size-20 text-primary drop-shadow-lg" aria-hidden="true" />
+          ) : (
+            <img
+              src={ASSETS.lnLogo}
+              alt="LN International School Logo"
+              width={96}
+              height={96}
+              onError={() => setLogoFailed(true)}
+              className="mx-auto size-20 object-contain drop-shadow-lg"
+            />
+          )}
           <h1 className="mt-5 font-display text-2xl font-semibold text-secondary-foreground">
             {LABELS.brand.school}
           </h1>
