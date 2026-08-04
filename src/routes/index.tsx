@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Eye, EyeOff, KeyRound, Loader2, UserRound } from "lucide-react";
+import { Eye, EyeOff, KeyRound, Loader2, ShieldCheck, UserRound } from "lucide-react";
 import { motion } from "motion/react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -57,6 +57,7 @@ function LoginScreen() {
   const { login } = useAuth();
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
+  const [logoFailed, setLogoFailed] = useState(false);
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -113,13 +114,18 @@ function LoginScreen() {
           transition={{ duration: MOTION.slow, ease: MOTION.ease }}
           className="text-center"
         >
-          <img
-            src={ASSETS.lnLogo}
-            alt="LN International School crest"
-            width={96}
-            height={96}
-            className="mx-auto size-20 object-contain drop-shadow-lg"
-          />
+          {logoFailed ? (
+            <ShieldCheck className="mx-auto size-20 text-primary drop-shadow-lg" aria-hidden="true" />
+          ) : (
+            <img
+              src={ASSETS.lnLogo}
+              alt="LN International School Logo"
+              width={96}
+              height={96}
+              onError={() => setLogoFailed(true)}
+              className="mx-auto size-20 object-contain drop-shadow-lg"
+            />
+          )}
           <h1 className="mt-5 font-display text-2xl font-semibold text-secondary-foreground">
             {LABELS.brand.school}
           </h1>
