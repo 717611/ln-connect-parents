@@ -3,7 +3,6 @@ import { CalendarCheck, CalendarX2, CircleSlash, Percent } from "lucide-react";
 
 import { SectionCard } from "@/components/common/SectionCard";
 import { SectionHeading } from "@/components/common/SectionHeading";
-import { StatusBadge } from "@/components/common/StatusBadge";
 import { EmptyState } from "@/components/feedback/EmptyState";
 import { ErrorState } from "@/components/feedback/ErrorState";
 import { ListSkeleton } from "@/components/feedback/skeletons";
@@ -11,7 +10,6 @@ import { AppShell } from "@/components/layout/AppShell";
 import { LABELS } from "@/constants/labels";
 import { useAttendanceSummary } from "@/hooks/useAttendance";
 import { useStudentProfile } from "@/hooks/useStudentProfile";
-import { formatDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { ATTENDANCE_STATUS_LABEL, type AttendanceStatus } from "@/models";
 
@@ -36,20 +34,45 @@ export const Route = createFileRoute("/attendance")({
 
 const WEEKDAYS = ["S", "M", "T", "W", "T", "F", "S"] as const;
 
-const TILE_STYLES: Record<AttendanceStatus, string> = {
-  present: "bg-success-soft text-success",
-  absent: "bg-destructive-soft text-destructive",
-  late: "bg-warning-soft text-warning-foreground",
-  holiday: "bg-muted text-muted-foreground",
-  unmarked: "bg-transparent text-muted-foreground/60",
+/** Status badge palette shared by the calendar tiles and the history list. */
+const BADGE_STYLES: Record<AttendanceStatus, string> = {
+  present: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  absent: "bg-rose-50 text-rose-700 border-rose-200",
+  late: "bg-amber-50 text-amber-700 border-amber-200",
+  half_day: "bg-sky-50 text-sky-700 border-sky-200",
+  holiday: "bg-slate-100 text-slate-500 border-slate-200",
+  unmarked: "bg-transparent text-slate-400 border-transparent",
 };
 
 const DOT_STYLES: Record<AttendanceStatus, string> = {
-  present: "bg-success",
-  absent: "bg-destructive",
-  late: "bg-warning",
-  holiday: "bg-muted-foreground/50",
+  present: "bg-emerald-500",
+  absent: "bg-rose-500",
+  late: "bg-amber-500",
+  half_day: "bg-sky-500",
+  holiday: "bg-slate-300",
   unmarked: "bg-transparent",
+};
+
+/** `YYYY-MM-DD` -> "02 Aug 2026" without going through a timezone-shifted Date. */
+const MONTH_NAMES = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+] as const;
+
+const formatDayKey = (key: string): string => {
+  const [year, month, day] = key.split("-");
+  const monthName = MONTH_NAMES[Number(month) - 1] ?? month;
+  return `${day} ${monthName} ${year}`;
 };
 
 function StatCard({
@@ -74,47 +97,58 @@ function StatCard({
   );
 }
 
+function StatusPill({ status }: { status: AttendanceStatus }) {
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold leading-none",
+        BADGE_STYLES[status],
+      )}
+    >
+      {ATTENDANCE_STATUS_LABEL[status]}
+    </span>
+  );
+}
+
 function AttendanceRoute() {
-  const { student, isError, refetch } = useStudentProfile();
+  const { student, isError: profileError, refetch } = useStudentProfile();
   const summaryQuery = useAttendanceSummary(
     student?.id ?? null,
     undefined,
     student?.admissionNumber ?? null,
   );
-  const summary = summaryQuery.data ?? null;
+  const summary = summaryQuery.data;
 
   const today = new Date();
   const year = today.getFullYear();
   const monthIndex = today.getMonth();
+  const monthPrefix = `${year}-${String(monthIndex + 1).padStart(2, "0")}`;
   const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
   const leadingBlanks = new Date(year, monthIndex, 1).getDay();
   const monthLabel = new Intl.DateTimeFormat("en-IN", { month: "long", year: "numeric" }).format(
     today,
   );
 
-  const statusByDay = new Map<number, AttendanceStatus>();
-  (summary?.days ?? []).forEach((day) => {
-    const date = new Date(day.date);
-    if (date.getFullYear() === year && date.getMonth() === monthIndex) {
-      statusByDay.set(date.getDate(), day.status);
-    }
-  });
+  const dayKey = (dayNumber: number) => `${monthPrefix}-${String(dayNumber).padStart(2, "0")}`;
+
+  const statusByDay = new Map<string, AttendanceStatus>();
+  (summary?.days ?? []).forEach((day) => statusByDay.set(day.date, day.status));
 
   const statusFor = (dayNumber: number): AttendanceStatus => {
-    const marked = statusByDay.get(dayNumber);
+    const marked = statusByDay.get(dayKey(dayNumber));
     if (marked) return marked;
     const weekday = new Date(year, monthIndex, dayNumber).getDay();
     if (weekday === 0 || weekday === 6) return "holiday";
     return "unmarked";
   };
 
-  const absences = (summary?.days ?? []).filter(
-    (day) => day.status === "absent" || day.status === "late",
+  const flagged = (summary?.days ?? []).filter(
+    (day) => day.status === "absent" || day.status === "late" || day.status === "half_day",
   );
 
   return (
     <AppShell title={LABELS.attendance.title} showBack>
-      {isError ? (
+      {profileError || summaryQuery.isError ? (
         <div className="surface-card">
           <ErrorState onRetry={refetch} />
         </div>
@@ -173,8 +207,8 @@ function AttendanceRoute() {
                       key={dayNumber}
                       title={ATTENDANCE_STATUS_LABEL[status]}
                       className={cn(
-                        "flex aspect-square flex-col items-center justify-center rounded-xl text-xs font-semibold",
-                        TILE_STYLES[status],
+                        "flex aspect-square flex-col items-center justify-center rounded-xl border text-xs font-semibold",
+                        BADGE_STYLES[status],
                         isToday ? "ring-2 ring-primary/50" : "",
                       )}
                     >
@@ -185,7 +219,7 @@ function AttendanceRoute() {
                 })}
               </div>
               <div className="mt-4 flex flex-wrap items-center gap-3 text-[11px] text-muted-foreground">
-                {(["present", "absent", "holiday"] as const).map((status) => (
+                {(["present", "absent", "late", "half_day", "holiday"] as const).map((status) => (
                   <span key={status} className="flex items-center gap-1.5">
                     <span className={cn("size-2 rounded-full", DOT_STYLES[status])} />
                     {ATTENDANCE_STATUS_LABEL[status]}
@@ -205,18 +239,18 @@ function AttendanceRoute() {
                   body={LABELS.attendance.emptyBody}
                 />
               </div>
-            ) : absences.length === 0 ? (
+            ) : flagged.length === 0 ? (
               <SectionCard delay={0.15}>
                 <p className="text-xs text-muted-foreground">{LABELS.attendance.allPresent}</p>
               </SectionCard>
             ) : (
               <SectionCard delay={0.15}>
                 <ul className="divide-y divide-border">
-                  {absences.map((day) => (
+                  {flagged.map((day) => (
                     <li key={day.date} className="flex items-center justify-between gap-3 py-3">
                       <div className="min-w-0">
                         <p className="text-sm font-semibold text-foreground">
-                          {formatDate(day.date)}
+                          {formatDayKey(day.date)}
                         </p>
                         {day.remark ? (
                           <p className="mt-0.5 truncate text-xs text-muted-foreground">
@@ -224,10 +258,7 @@ function AttendanceRoute() {
                           </p>
                         ) : null}
                       </div>
-                      <StatusBadge
-                        label={ATTENDANCE_STATUS_LABEL[day.status]}
-                        tone={day.status === "absent" ? "danger" : "warning"}
-                      />
+                      <StatusPill status={day.status} />
                     </li>
                   ))}
                 </ul>

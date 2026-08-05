@@ -11,4 +11,19 @@ export const attendanceService = {
   ): Promise<AttendanceSummary> {
     return AttendanceRepository.getMonthlySummary(studentId, month, admissionNumber);
   },
+
+  /** Live monthly attendance. Returns the unsubscribe handle. */
+  subscribeMonthlySummary(
+    studentId: string,
+    month: string,
+    admissionNumber: string | null,
+    onChange: (summary: AttendanceSummary) => void,
+  ): () => void {
+    return AttendanceRepository.subscribeMonthlySummary(
+      studentId,
+      month,
+      admissionNumber,
+      onChange,
+    );
+  },
 };

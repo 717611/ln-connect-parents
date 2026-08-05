@@ -286,14 +286,49 @@ const attendanceStatus = (value: unknown): AttendanceStatus => {
   if (raw.startsWith("p")) return "present";
   if (raw.startsWith("a") || raw === "ab") return "absent";
   if (raw.startsWith("l") || raw.startsWith("t")) return "late";
+  if (raw.startsWith("half") || raw === "hd" || raw.startsWith("hf")) return "half_day";
   if (raw.startsWith("h") || raw.startsWith("w")) return "holiday";
-  return pick<AttendanceStatus>(raw, ["present", "absent", "late", "holiday", "unmarked"], "unmarked");
+  return pick<AttendanceStatus>(raw, ["present", "absent", "late", "half_day", "holiday", "unmarked"], "unmarked");
+};
+
+/**
+ * Resolve the calendar day of a record as `YYYY-MM-DD` without timezone drift:
+ * plain date strings are used verbatim, timestamps are read in local time.
+ */
+const attendanceDateKey = (raw: RawDoc): string => {
+  const candidates = [
+    raw["date"],
+    raw["attendanceDate"],
+    raw["day"],
+    raw["dateKey"],
+    raw.id,
+    raw["createdAt"],
+  ];
+
+  for (const candidate of candidates) {
+    if (typeof candidate === "string") {
+      const match = /(\d{4})-(\d{2})-(\d{2})/.exec(candidate.trim());
+      if (match) return `${match[1]}-${match[2]}-${match[3]}`;
+    }
+  }
+
+  for (const candidate of candidates) {
+    if (candidate === undefined || candidate === null || candidate === "") continue;
+    const parsed = new Date(toIso(candidate));
+    if (!Number.isNaN(parsed.getTime())) {
+      const month = String(parsed.getMonth() + 1).padStart(2, "0");
+      const day = String(parsed.getDate()).padStart(2, "0");
+      return `${parsed.getFullYear()}-${month}-${day}`;
+    }
+  }
+
+  return "";
 };
 
 export const mapAttendanceDay = (raw: RawDoc): AttendanceDay => {
   const remark = str(raw["remark"] ?? raw["note"] ?? raw["reason"]).trim();
   return {
-    date: toIso(raw["date"] ?? raw["attendanceDate"] ?? raw["createdAt"]),
+    date: attendanceDateKey(raw),
     status: attendanceStatus(raw["status"] ?? raw["attendanceStatus"] ?? raw["present"]),
     ...(remark ? { remark } : {}),
   };
@@ -304,18 +339,22 @@ export const mapAttendanceSummary = (
   month: string,
   docs: RawDoc[],
 ): AttendanceSummary => {
-  const days: AttendanceDay[] = docs
+  const byDate = new Map<string, AttendanceDay>();
+  docs
     .map(mapAttendanceDay)
-    .filter((day) => day.date.slice(0, 7) === month)
-    .sort((a, b) => a.date.localeCompare(b.date));
+    .filter((day) => Boolean(day.date) && day.date.slice(0, 7) === month)
+    .forEach((day) => byDate.set(day.date, day));
+
+  const days = [...byDate.values()].sort((a, b) => a.date.localeCompare(b.date));
 
   const count = (status: AttendanceStatus) => days.filter((day) => day.status === status).length;
   const presentDays = count("present");
   const lateDays = count("late");
   const absentDays = count("absent");
-  const workingDays = days.filter(
-    (day) => day.status !== "holiday" && day.status !== "unmarked",
-  ).length;
+  const halfDays = count("half_day");
+  // Recorded days only: holidays and unmarked days never affect the percentage.
+  const workingDays = presentDays + lateDays + absentDays + halfDays;
+  const credited = presentDays + lateDays + halfDays * 0.5;
 
   return {
     studentId,
@@ -323,10 +362,11 @@ export const mapAttendanceSummary = (
     presentDays,
     absentDays,
     lateDays,
+    halfDays,
     workingDays,
-    percentage: workingDays ? Math.round(((presentDays + lateDays) / workingDays) * 100) : null,
+    percentage: workingDays ? Math.round((credited / workingDays) * 100) : null,
     days,
     isAvailable: days.length > 0,
   };
-
 };
+

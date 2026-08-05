@@ -1,9 +1,14 @@
-import type { IsoDateTime } from "./common";
-
-export type AttendanceStatus = "present" | "absent" | "late" | "holiday" | "unmarked";
+export type AttendanceStatus =
+  | "present"
+  | "absent"
+  | "late"
+  | "half_day"
+  | "holiday"
+  | "unmarked";
 
 export interface AttendanceDay {
-  date: IsoDateTime;
+  /** Local calendar day as `YYYY-MM-DD` — never a timestamp, to avoid TZ drift. */
+  date: string;
   status: AttendanceStatus;
   remark?: string;
 }
@@ -14,6 +19,8 @@ export interface AttendanceSummary {
   presentDays: number;
   absentDays: number;
   lateDays: number;
+  halfDays: number;
+  /** Days the school actually marked (present + absent + late + half day). */
   workingDays: number;
   percentage: number | null;
   days: AttendanceDay[];
@@ -25,6 +32,7 @@ export const ATTENDANCE_STATUS_LABEL: Record<AttendanceStatus, string> = {
   present: "Present",
   absent: "Absent",
   late: "Late",
+  half_day: "Half Day",
   holiday: "Holiday",
   unmarked: "Not marked",
 };
