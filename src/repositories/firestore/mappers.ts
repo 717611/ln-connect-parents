@@ -286,8 +286,9 @@ const attendanceStatus = (value: unknown): AttendanceStatus => {
   if (raw.startsWith("p")) return "present";
   if (raw.startsWith("a") || raw === "ab") return "absent";
   if (raw.startsWith("l") || raw.startsWith("t")) return "late";
+  if (raw.startsWith("half") || raw === "hd" || raw.startsWith("hf")) return "half_day";
   if (raw.startsWith("h") || raw.startsWith("w")) return "holiday";
-  return pick<AttendanceStatus>(raw, ["present", "absent", "late", "holiday", "unmarked"], "unmarked");
+  return pick<AttendanceStatus>(raw, ["present", "absent", "late", "half_day", "holiday", "unmarked"], "unmarked");
 };
 
 /**

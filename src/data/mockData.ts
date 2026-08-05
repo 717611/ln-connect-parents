@@ -432,6 +432,7 @@ export const mockAttendanceSummary: AttendanceSummary = {
   presentDays: 0,
   absentDays: 0,
   lateDays: 0,
+  halfDays: 0,
   workingDays: 0,
   percentage: null,
   days: [],
