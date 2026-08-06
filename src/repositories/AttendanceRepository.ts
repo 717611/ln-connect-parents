@@ -29,7 +29,14 @@ export interface IAttendanceRepository {
 }
 
 /** Identifier fields the School Portal may use on an attendance record. */
-const ID_FIELDS = ["studentId", "admissionNo", "admissionNumber", "studentAdmissionNo"] as const;
+const ID_FIELDS = [
+  "studentId",
+  "student_id",
+  "admissionNo",
+  "admissionNumber",
+  "admission_no",
+  "studentAdmissionNo",
+] as const;
 
 const matchesStudent = (raw: RawDoc, identifiers: string[]): boolean =>
   ID_FIELDS.some((field) => {
