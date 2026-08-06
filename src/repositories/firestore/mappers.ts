@@ -279,14 +279,16 @@ export const mapGalleryPhoto = (raw: RawDoc): GalleryPhoto => ({
   aspect: pick(raw["aspect"], ["portrait", "landscape", "square"] as const, "landscape"),
 });
 
-/** School Portal writes "P"/"Present"/"present"/"A" — normalise them all. */
+/** School Portal writes "P"/"Present"/"PRESENT"/"A"/true — normalise them all. */
 const attendanceStatus = (value: unknown): AttendanceStatus => {
-  const raw = str(value).trim().toLowerCase();
+  if (typeof value === "boolean") return value ? "present" : "absent";
+  const raw = str(value).trim().toLowerCase().replace(/[\s_-]+/g, "");
   if (!raw) return "unmarked";
+  if (raw.startsWith("halfday") || raw === "hd" || raw.startsWith("hf") || raw === "half")
+    return "half_day";
   if (raw.startsWith("p")) return "present";
   if (raw.startsWith("a") || raw === "ab") return "absent";
   if (raw.startsWith("l") || raw.startsWith("t")) return "late";
-  if (raw.startsWith("half") || raw === "hd" || raw.startsWith("hf")) return "half_day";
   if (raw.startsWith("h") || raw.startsWith("w")) return "holiday";
   return pick<AttendanceStatus>(raw, ["present", "absent", "late", "half_day", "holiday", "unmarked"], "unmarked");
 };
@@ -325,12 +327,50 @@ const attendanceDateKey = (raw: RawDoc): string => {
   return "";
 };
 
+/** Nested per-student arrays the School Portal may use on a class-day document. */
+const NESTED_KEYS = ["records", "students", "entries", "attendance", "data", "list"] as const;
+
+/**
+ * Teachers may mark attendance either as one document per student per day, or as
+ * a single class-day document holding an array of student records. Flatten the
+ * latter so matching and mapping only ever deal with per-student rows, keeping
+ * the parent document's date/class fields.
+ */
+export const expandAttendanceDocs = (raws: RawDoc[]): RawDoc[] => {
+  const rows: RawDoc[] = [];
+  raws.forEach((raw) => {
+    const nested = NESTED_KEYS.flatMap((key) => {
+      const value = raw[key];
+      return Array.isArray(value) ? (value as unknown[]) : [];
+    }).filter((entry): entry is Record<string, unknown> => Boolean(entry) && typeof entry === "object");
+
+    if (nested.length === 0) {
+      rows.push(raw);
+      return;
+    }
+
+    const { records, students, entries, attendance, data, list, ...parent } = raw as RawDoc &
+      Record<string, unknown>;
+    void records, students, entries, attendance, data, list;
+
+    nested.forEach((entry, index) => {
+      rows.push({ ...parent, ...entry, id: `${raw.id}#${index}` } as RawDoc);
+    });
+  });
+  return rows;
+};
+
 export const mapAttendanceDay = (raw: RawDoc): AttendanceDay => {
   const remark = str(raw["remark"] ?? raw["note"] ?? raw["reason"]).trim();
   return {
     date: attendanceDateKey(raw),
     status: attendanceStatus(
-      raw["status"] ?? raw["attendanceStatus"] ?? raw["attendance_status"] ?? raw["present"],
+      raw["status"] ??
+        raw["attendanceStatus"] ??
+        raw["attendance_status"] ??
+        raw["state"] ??
+        raw["isPresent"] ??
+        raw["present"],
     ),
     ...(remark ? { remark } : {}),
   };
@@ -342,7 +382,7 @@ export const mapAttendanceSummary = (
   docs: RawDoc[],
 ): AttendanceSummary => {
   const byDate = new Map<string, AttendanceDay>();
-  docs
+  expandAttendanceDocs(docs)
     .map(mapAttendanceDay)
     .filter((day) => Boolean(day.date) && day.date.slice(0, 7) === month)
     .forEach((day) => byDate.set(day.date, day));

@@ -14,6 +14,8 @@ export const APP_CONFIG = {
   supportEmail: "support@lnisranchi.in",
   supportPhone: "+91 90000 00000",
   simulatedLatencyMs: 220,
+  /** Mock data is never used when Firebase env vars are present. */
+  useMockData: false,
   queryStaleTimeMs: 60_000,
   session: {
     storageKey: "ln-parent.session",

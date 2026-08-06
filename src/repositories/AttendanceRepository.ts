@@ -10,7 +10,7 @@ import {
   where,
   type RawDoc,
 } from "./firestore/firestore.utils";
-import { mapAttendanceSummary } from "./firestore/mappers";
+import { expandAttendanceDocs, mapAttendanceSummary } from "./firestore/mappers";
 import { resolveMock } from "./repository.utils";
 
 export interface IAttendanceRepository {
@@ -35,7 +35,10 @@ const ID_FIELDS = [
   "admissionNo",
   "admissionNumber",
   "admission_no",
+  "admission_number",
   "studentAdmissionNo",
+  "studentAdmissionNumber",
+  "rollNumber",
 ] as const;
 
 const matchesStudent = (raw: RawDoc, identifiers: string[]): boolean =>
@@ -43,6 +46,10 @@ const matchesStudent = (raw: RawDoc, identifiers: string[]): boolean =>
     const value = str(raw[field]).trim();
     return Boolean(value) && identifiers.includes(value);
   });
+
+/** Flatten class-day documents first, so nested student rows can match too. */
+const matchingRows = (docs: RawDoc[], identifiers: string[]): RawDoc[] =>
+  expandAttendanceDocs(docs).filter((raw) => matchesStudent(raw, identifiers));
 
 const identifiersFor = (studentId: string, admissionNumber?: string | null): string[] =>
   [studentId, admissionNumber ?? ""].map((value) => value.trim()).filter(Boolean);
@@ -72,9 +79,7 @@ export const AttendanceRepository: IAttendanceRepository = {
     if (byId.size === 0) {
       try {
         const docs = await listDocs(COLLECTIONS.attendance);
-        docs
-          .filter((raw) => matchesStudent(raw, identifiers))
-          .forEach((raw) => byId.set(raw.id, raw));
+        matchingRows(docs, identifiers).forEach((raw) => byId.set(raw.id, raw));
       } catch (error) {
         console.error("[attendance] failed scanning collection", error);
       }
@@ -116,7 +121,7 @@ export const AttendanceRepository: IAttendanceRepository = {
         COLLECTIONS.attendance,
         [],
         (docs) => {
-          docs.filter((raw) => matchesStudent(raw, identifiers)).forEach((raw) => byId.set(raw.id, raw));
+          matchingRows(docs, identifiers).forEach((raw) => byId.set(raw.id, raw));
           emit();
         },
         (error) => console.error("[attendance] live collection scan failed", error),
