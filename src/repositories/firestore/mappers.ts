@@ -329,7 +329,9 @@ export const mapAttendanceDay = (raw: RawDoc): AttendanceDay => {
   const remark = str(raw["remark"] ?? raw["note"] ?? raw["reason"]).trim();
   return {
     date: attendanceDateKey(raw),
-    status: attendanceStatus(raw["status"] ?? raw["attendanceStatus"] ?? raw["present"]),
+    status: attendanceStatus(
+      raw["status"] ?? raw["attendanceStatus"] ?? raw["attendance_status"] ?? raw["present"],
+    ),
     ...(remark ? { remark } : {}),
   };
 };
