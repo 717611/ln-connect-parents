@@ -279,14 +279,16 @@ export const mapGalleryPhoto = (raw: RawDoc): GalleryPhoto => ({
   aspect: pick(raw["aspect"], ["portrait", "landscape", "square"] as const, "landscape"),
 });
 
-/** School Portal writes "P"/"Present"/"present"/"A" — normalise them all. */
+/** School Portal writes "P"/"Present"/"PRESENT"/"A"/true — normalise them all. */
 const attendanceStatus = (value: unknown): AttendanceStatus => {
-  const raw = str(value).trim().toLowerCase();
+  if (typeof value === "boolean") return value ? "present" : "absent";
+  const raw = str(value).trim().toLowerCase().replace(/[\s_-]+/g, "");
   if (!raw) return "unmarked";
+  if (raw.startsWith("halfday") || raw === "hd" || raw.startsWith("hf") || raw === "half")
+    return "half_day";
   if (raw.startsWith("p")) return "present";
   if (raw.startsWith("a") || raw === "ab") return "absent";
   if (raw.startsWith("l") || raw.startsWith("t")) return "late";
-  if (raw.startsWith("half") || raw === "hd" || raw.startsWith("hf")) return "half_day";
   if (raw.startsWith("h") || raw.startsWith("w")) return "holiday";
   return pick<AttendanceStatus>(raw, ["present", "absent", "late", "half_day", "holiday", "unmarked"], "unmarked");
 };
