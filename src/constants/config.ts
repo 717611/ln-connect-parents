@@ -14,6 +14,8 @@ export const APP_CONFIG = {
   supportEmail: "support@lnisranchi.in",
   supportPhone: "+91 90000 00000",
   simulatedLatencyMs: 220,
+  /** Mock data is never used when Firebase env vars are present. */
+  useMockData: false,
   queryStaleTimeMs: 60_000,
   session: {
     storageKey: "ln-parent.session",
@@ -23,7 +25,8 @@ export const APP_CONFIG = {
 export type DataSource = "mock" | "firebase";
 
 /** "firebase" once the VITE_FIREBASE_* env vars are configured. */
-export const getDataSource = (): DataSource => (isFirebaseConfigured() ? "firebase" : "mock");
+export const getDataSource = (): DataSource =>
+  isFirebaseConfigured() ? "firebase" : APP_CONFIG.useMockData ? "mock" : "mock";
 
 
 /**

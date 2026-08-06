@@ -10,7 +10,7 @@ import {
   where,
   type RawDoc,
 } from "./firestore/firestore.utils";
-import { mapAttendanceSummary } from "./firestore/mappers";
+import { expandAttendanceDocs, mapAttendanceSummary } from "./firestore/mappers";
 import { resolveMock } from "./repository.utils";
 
 export interface IAttendanceRepository {
@@ -79,9 +79,7 @@ export const AttendanceRepository: IAttendanceRepository = {
     if (byId.size === 0) {
       try {
         const docs = await listDocs(COLLECTIONS.attendance);
-        docs
-          .filter((raw) => matchesStudent(raw, identifiers))
-          .forEach((raw) => byId.set(raw.id, raw));
+        matchingRows(docs, identifiers).forEach((raw) => byId.set(raw.id, raw));
       } catch (error) {
         console.error("[attendance] failed scanning collection", error);
       }
@@ -123,7 +121,7 @@ export const AttendanceRepository: IAttendanceRepository = {
         COLLECTIONS.attendance,
         [],
         (docs) => {
-          docs.filter((raw) => matchesStudent(raw, identifiers)).forEach((raw) => byId.set(raw.id, raw));
+          matchingRows(docs, identifiers).forEach((raw) => byId.set(raw.id, raw));
           emit();
         },
         (error) => console.error("[attendance] live collection scan failed", error),
