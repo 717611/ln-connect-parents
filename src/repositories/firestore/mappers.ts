@@ -382,7 +382,7 @@ export const mapAttendanceSummary = (
   docs: RawDoc[],
 ): AttendanceSummary => {
   const byDate = new Map<string, AttendanceDay>();
-  docs
+  expandAttendanceDocs(docs)
     .map(mapAttendanceDay)
     .filter((day) => Boolean(day.date) && day.date.slice(0, 7) === month)
     .forEach((day) => byDate.set(day.date, day));
