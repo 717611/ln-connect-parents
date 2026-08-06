@@ -25,8 +25,7 @@ export const APP_CONFIG = {
 export type DataSource = "mock" | "firebase";
 
 /** "firebase" once the VITE_FIREBASE_* env vars are configured. */
-export const getDataSource = (): DataSource =>
-  isFirebaseConfigured() ? "firebase" : APP_CONFIG.useMockData ? "mock" : "mock";
+export const getDataSource = (): DataSource => (isFirebaseConfigured() ? "firebase" : "mock");
 
 
 /**
