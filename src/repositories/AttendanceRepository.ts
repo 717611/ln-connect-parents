@@ -35,7 +35,10 @@ const ID_FIELDS = [
   "admissionNo",
   "admissionNumber",
   "admission_no",
+  "admission_number",
   "studentAdmissionNo",
+  "studentAdmissionNumber",
+  "rollNumber",
 ] as const;
 
 const matchesStudent = (raw: RawDoc, identifiers: string[]): boolean =>
@@ -43,6 +46,10 @@ const matchesStudent = (raw: RawDoc, identifiers: string[]): boolean =>
     const value = str(raw[field]).trim();
     return Boolean(value) && identifiers.includes(value);
   });
+
+/** Flatten class-day documents first, so nested student rows can match too. */
+const matchingRows = (docs: RawDoc[], identifiers: string[]): RawDoc[] =>
+  expandAttendanceDocs(docs).filter((raw) => matchesStudent(raw, identifiers));
 
 const identifiersFor = (studentId: string, admissionNumber?: string | null): string[] =>
   [studentId, admissionNumber ?? ""].map((value) => value.trim()).filter(Boolean);
